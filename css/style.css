@@ -1,0 +1,155 @@
+@charset "utf-8";
+body header nav {
+    background-color: #2171DD;
+    margin-top: px;
+    font-family: "微软雅黑";
+    text-align: center;
+    color: #FFFFFF;
+    margin-left: 5%;
+    margin-right: 5%;
+    margin-bottom: -10px;
+    padding-top: 20px;
+    font-size: 25px;
+    padding-bottom: 10px;
+}
+body header p {
+    font-size: 40px;
+    background-color: #2171DD;
+    padding-top: 20px;
+    margin-right: 5%;
+    margin-left: 5%;
+    margin-bottom: 0px;
+    text-align: center;
+    color: #FFFFFF;
+    text-indent: 0px;
+    letter-spacing: 2px;
+}
+.EastGroup {
+    margin-left: 5%;
+    margin-right: 5%;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+.WestGroup {
+    margin-left: 5%;
+    margin-right: 5%;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    clear: both;
+    padding-top: 10px;
+}
+.EastGroup .daxiyang {
+
+
+}
+.WestGroup .xibei {
+
+
+}
+
+.EastGroup p {
+    background-color: #3D83E2;
+    color: #FFFFFF;
+    text-indent: 20px;
+    font-family: "微软雅黑";
+    font-size: 20px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    margin-bottom: -15px;
+}
+.WestGroup p {
+    background-color: #3D83E2;
+    color: #FFFFFF;
+    text-indent: 20px;
+    font-family: "微软雅黑";
+    font-size: 20px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    margin-bottom: -15px;
+}
+.EastGroup .dongnan {
+    text-align: justify;
+
+}
+.WestGroup .xinan {
+    text-align: justify;
+
+}
+.EastGroup .dongnan p {
+    background-color: #0E305E;
+    font-family: "微软雅黑";
+    font-size: 15px;
+}
+.WestGroup .xinan p {
+    background-color: #0E305E;
+    font-family: "微软雅黑";
+    font-size: 15px;
+}
+.EastGroup .daxiyang p {
+    background-color: #0E305E;
+    font-family: "微软雅黑";
+    font-size: 15px;
+}
+.WestGroup .xibei p {
+    background-color: #0E305E;
+    font-family: "微软雅黑";
+    font-size: 15px;
+}
+.EastGroup .zhongyang p {
+    background-color: #0E305E;
+    font-family: "微软雅黑";
+    font-size: 15px;
+}
+.WestGroup .taipingyang p {
+    background-color: #0E305E;
+    font-family: "微软雅黑";
+    font-size: 15px;
+}
+.dongnan .ATL img {
+    margin-top: 0px;
+
+}
+.xinan .ATL img {
+    margin-top: 0px;
+
+}
+.dongnan .ATL p {
+    background-color: #FFFFFF;
+    color: #000000;
+    font-family: "微软雅黑";
+    font-size: 20px;
+}
+.xinan .ATL p {
+    background-color: #FFFFFF;
+    color: #000000;
+    font-family: "微软雅黑";
+    font-size: 20px;
+}
+.daxiyang .ATL p {
+    background-color: #FFFFFF;
+    color: #000000;
+    font-family: "微软雅黑";
+    font-size: 20px;
+}
+.xibei .ATL p {
+    background-color: #FFFFFF;
+    color: #000000;
+    font-family: "微软雅黑";
+    font-size: 20px;
+}
+.zhongyang .ATL p {
+    background-color: #FFFFFF;
+    color: #000000;
+    font-family: "微软雅黑";
+    font-size: 20px;
+}
+.taipingyang .ATL p {
+    background-color: #FFFFFF;
+    color: #000000;
+    font-family: "微软雅黑";
+    font-size: 20px;
+}
+header nav a {
+    color: #FFFFFF;
+    text-decoration: none;
+}

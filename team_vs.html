@@ -1,0 +1,347 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>球队数据对比</title>
+<link href="css/style_vs.css" rel="stylesheet" type="text/css">
+  <script src="js/d3.min.js"></script>
+  <script src="js/d3-v6-tip.js"></script>
+  <script src="js/jquery-3.4.1.min.js"></script></head>
+  <link rel="stylesheet" href="css/d3-tip.css">
+
+<body>
+<header>
+<p><img src="imgs/nba-icon.png" alt="" height="50" align="center"/>&nbsp;球队数据统计</p>
+  <nav><a href="team_index.html">主页</a>&nbsp; &nbsp; 
+    <a class="general" href="team_trend.html">数据总览</a>&nbsp; &nbsp; 
+    <a class="trend" href="team_trend.html">数据趋势</a>&nbsp; &nbsp; 
+	<a class="shoot" href="team_shoot.html">投篮热区</a>&nbsp; &nbsp; 
+	<a class="vs" href="team_vs.html">球队对比</a></nav>
+</header>
+	<p>&nbsp;&nbsp;球队数据对比</p>
+
+	<div class="container">
+		<div class="inputdiv">
+			球队A：
+			<input type="text" id="InputA" placeholder="输入球队A">
+			<div class="options-list" id="optionsListA"></div>
+		</div>
+		<div class="inputdiv">
+			球队B：
+			<input type="text" id="InputB" placeholder="输入球队B">
+			<div class="options-list" id="optionsListB"></div>
+		</div>
+		<div class="inputdiv">
+			赛季年份：
+			<select class="seasonyear">
+				<option value="2022">2022</option>
+				<option value="2021">2021</option>
+				<option value="2020">2020</option>
+				<option value="2019">2019</option>
+				<option value="2018">2018</option>
+				<option value="2017">2017</option>
+				<option value="2016">2016</option>
+				<option value="2015">2015</option>
+				<option value="2014">2014</option>
+				<option value="2013">2013</option>
+				<option value="2012">2012</option>
+				<option value="2011">2011</option>
+				<option value="2010">2010</option>
+				<option value="2009">2009</option>
+				<option value="2008">2008</option>
+				<option value="2007">2007</option>
+				<option value="2006">2006</option>
+				<option value="2005">2005</option>
+				<option value="2004">2004</option>
+    		</select>
+		</div>
+	</div>
+	<p></p>
+	<svg width="1700" height="800" id="mainsvg" class="svgs"></svg>
+
+  
+<script>
+	var teamdict = {1:"ATL",2:"CHA",3:"MIA",4:"ORL",5:"WAS",6:"BOS",7:"BKN",8:"NYK",9:"PHI",10:"TOR",
+            11:"CHI",12:"CLE",13:"DET",14:"IND",15:"MIL",16:"DAL",17:"HOU",18:"MEM",19:"NOP",20:"SAS",
+            21:"DEN",22:"MIN",23:"OKC",24:"POR",25:"UTA",26:"GSW",27:"LAC",28:"LAL",29:"PHX",30:"SAC",
+			31:"avg"};
+	var options = ["亚特兰大 老鹰", "夏洛特 黄蜂", "迈阿密 热火", "奥兰多 魔术", "华盛顿奇才",
+			"波士顿 凯尔特人", "布鲁克林 篮网", "纽约 尼克斯", "费城 76人", "多伦多 猛龙",
+			"芝加哥 公牛", "克利夫兰 骑士", "底特律 活塞", "印第安纳 步行者", "密尔沃基 雄鹿",
+			"达拉斯 独行侠", "休斯顿 火箭", "孟菲斯 灰熊", "新奥尔良 鹈鹕", "圣安东尼奥 马刺",
+			"丹佛 掘金", "明尼苏达 森林狼", "俄克拉荷马城 雷霆", "波特兰 开拓者", "犹他 爵士",
+			"金州 勇士", "洛杉矶 快船", "洛杉矶 湖人", "菲尼克斯 太阳", "萨克拉门托 国王","联盟平均"];
+	var name2id = {"亚特兰大 老鹰":1, "夏洛特 黄蜂":2, "迈阿密 热火":3, "奥兰多 魔术":4, "华盛顿奇才":5,
+			"波士顿 凯尔特人":6, "布鲁克林 篮网":7, "纽约 尼克斯":8, "费城 76人":9, "多伦多 猛龙":10,
+			"芝加哥 公牛":11, "克利夫兰 骑士":12, "底特律 活塞":13, "印第安纳 步行者":14, "密尔沃基 雄鹿":15,
+			"达拉斯 独行侠":16, "休斯顿 火箭":17, "孟菲斯 灰熊":18, "新奥尔良 鹈鹕":19, "圣安东尼奥 马刺":20,
+			"丹佛 掘金":21, "明尼苏达 森林狼":22, "俄克拉荷马城 雷霆":23, "波特兰 开拓者":24, "犹他 爵士":25,
+			"金州 勇士":26, "洛杉矶 快船":27, "洛杉矶 湖人":28, "菲尼克斯 太阳":29, "萨克拉门托 国王":30,"联盟平均":31};
+    // 获取teamid
+    var url_param = location.search;
+    if (url_param.indexOf("=") != -1){
+      teamid = url_param.split("=")[1];
+    }
+    else {
+      teamid = 1;
+    }
+    // 显示图标
+    team_str = teamdict[teamid]
+    console.log(location.search)
+    // 参数修改
+    document.getElementsByClassName("general")[0].href = "team_general.html?teamid="+teamid.toString()
+    document.getElementsByClassName("trend")[0].href = "team_trend.html?teamid="+teamid.toString()
+	document.getElementsByClassName("vs")[0].href = "team_vs.html?teamid="+teamid.toString()
+	document.getElementsByClassName("shoot")[0].href = "team_shoot.html?teamid="+teamid.toString()
+
+	//输入框 选项列表
+	function input_event (input,optionsList) {
+      var keyword = input.value.trim();
+      optionsList.innerHTML = ""; // 清空选项列表
+
+      if (keyword !== "") {
+        var matchedOptions = getMatchedOptions(keyword);
+
+        if (matchedOptions.length === 0) {
+          var noMatchOption = document.createElement("div");
+          noMatchOption.textContent = "无";
+          noMatchOption.classList.add("option-item");
+          optionsList.appendChild(noMatchOption);
+          optionsList.style.display = "block";
+        } else {
+          matchedOptions.forEach(function(option) {
+            var optionItem = document.createElement("div");
+            optionItem.textContent = option;
+            optionItem.classList.add("option-item");
+  
+            optionItem.addEventListener("click", function() {
+				input.value = option;
+				optionsList.innerHTML = "";
+				optionsList.style.display = "none";
+				if ((options.indexOf(inputA.value)!=-1) && (options.indexOf(inputB.value)!=-1)){
+					  team_compa(inputA.value,inputB.value,yearselect.value)
+				}
+            });
+  
+            optionsList.appendChild(optionItem);
+          });
+  
+          optionsList.style.display = "block";
+        }
+      } else {
+        optionsList.style.display = "none";
+      }
+    }
+
+	function getMatchedOptions(keyword) {
+      var matchedOptions = options.filter(function(option) {
+        return option.includes(keyword);
+      });
+      return matchedOptions;
+    }
+	
+	var inputA = document.getElementById("InputA");
+	var inputB = document.getElementById("InputB");
+    var optionsListA = document.getElementById("optionsListA");
+	var optionsListB = document.getElementById("optionsListB");
+	var yearselect = document.getElementsByClassName("seasonyear")[0];
+	inputA.addEventListener("input", function() {
+		input_event(inputA, optionsListA);
+	});
+
+	inputB.addEventListener("input", function() {
+		input_event(inputB, optionsListB);
+	});
+
+	document.getElementById("InputA").value = options[teamid-1]
+
+	// 绘图
+	const svg = d3.select("svg")
+	const margin = {top: 50, right: 300, bottom: 100, left: 200};
+	const innerWidth = svg.attr("width") - margin.left - margin.right;
+	const innerHeight = svg.attr("height") - margin.top - margin.bottom;
+	const mainGroup = svg.append('g')
+	.attr('transform', `translate(${margin.left}, ${margin.top})`)
+
+	const text_list = ["场均得分","场均助攻","场均篮板","三分命中率(%)","罚球命中率(%)","场均抢断","场均失误","场均盖帽"]
+
+	// 数据对比
+	function team_compa(teamA,teamB,year) {
+		// read data
+		A_short = teamdict[name2id[teamA]]
+		B_short = teamdict[name2id[teamB]]
+		d3.json("teamdata/"+A_short+"_compa.json").then(data=>{
+			const data_A = (data.general).find(item=>item.year===parseInt(year))
+			d3.json("teamdata/"+B_short+"_compa.json").then(data=>{
+				const data_B = (data.general).find(item=>item.year===parseInt(year))
+				console.log(data_A)
+				// console.log(data_B)
+				const rec_width = 600
+				const rec_midwidth = 200
+				const rec_height = 80
+				mainGroup.selectAll("*").remove()
+				// 表头
+				mainGroup.append("rect").attr("x", 0).attr("y", 0).attr("width", rec_width).attr("height", rec_height).style("fill", "#000080");
+				mainGroup.append("rect").attr("x", 0).attr("y", 0).attr("width", 100).attr("height", rec_height).style("fill", "white");
+				mainGroup.append("rect").attr("x", rec_width).attr("y", 0).attr("width", rec_midwidth).attr("height", rec_height).style("fill", "#4169E1");
+				mainGroup.append("rect").attr("x", rec_width+rec_midwidth).attr("y", 0).attr("width", rec_width).attr("height", rec_height).style("fill", "#000080");
+				mainGroup.append("rect").attr("x", rec_width*2+rec_midwidth-100).attr("y", 0).attr("width", 100).attr("height", rec_height).style("fill", "white");
+				mainGroup.append("text").attr("x", rec_width-20).attr("y", rec_height/2).attr("dy", ".45em")
+				.attr("text-anchor", "end")
+				.attr("font-size", '25px')
+				.attr("fill","white")
+				.text(teamA);
+				mainGroup.append("text").attr("x", rec_width+rec_midwidth+20).attr("y", rec_height/2).attr("dy", ".45em")
+				.attr("text-anchor", "start")
+				.attr("font-size", '25px')
+				.attr("fill","white")
+				.text(teamB);
+				mainGroup.append("text").attr("x", rec_width+rec_midwidth/2).attr("y", rec_height/2).attr("dy", ".45em")
+				.attr("text-anchor", "middle")
+				.attr("font-size", '25px')
+				.attr("fill","white")
+				.text("VS");
+				// icon
+				if (A_short!="avg") {
+					mainGroup.append("image")
+					.attr("xlink:href", "imgs/"+A_short+"_logo.svg") 
+					.attr("x", 0) 
+					.attr("y", 0) 
+					.attr("width", rec_height) 
+					.attr("height", rec_height); 
+				}else{
+					mainGroup.append("image")
+					.attr("xlink:href", "imgs/nba-icon.png") 
+					.attr("x", 0) 
+					.attr("y", 0) 
+					.attr("width", rec_height) 
+					.attr("height", rec_height); 
+				}
+				if (B_short!="avg") {
+					mainGroup.append("image")
+					.attr("xlink:href", "imgs/"+B_short+"_logo.svg") 
+					.attr("x", rec_width*2+rec_midwidth-rec_height) 
+					.attr("y", 0) 
+					.attr("width", rec_height) 
+					.attr("height", rec_height); 
+				}else{
+					mainGroup.append("image")
+					.attr("xlink:href", "imgs/nba-icon.png") 
+					.attr("x", rec_width*2+rec_midwidth-rec_height) 
+					.attr("y", 0) 
+					.attr("width", rec_height) 
+					.attr("height", rec_height); 
+				}
+				// 数据柱状图
+				mainGroup.selectAll("text.bar-text").data(text_list).attr("class","bar-text").join("text")
+				.attr("x", rec_width+rec_midwidth/2)
+				.attr("y", (d,i)=>i*50+rec_height+50)
+				.attr("text-anchor", "middle")
+				.attr("font-size", '20px')
+				.attr("fill","black")
+				.text(d=>d);
+				// data
+				const scalelist = [
+					d3.scaleLinear().domain([0,150]).range([0, 500]),  //得分
+					d3.scaleLinear().domain([0,40]).range([0, 500]),  //助攻
+					d3.scaleLinear().domain([0,60]).range([0, 500]),  //篮板
+					d3.scaleLinear().domain([0,50]).range([0, 500]),  //三分%
+					d3.scaleLinear().domain([0,100]).range([0, 500]),  //罚球%
+					d3.scaleLinear().domain([0,50]).range([0, 500]),  //抢断
+					d3.scaleLinear().domain([0,50]).range([0, 500]),  //失误
+					d3.scaleLinear().domain([0,50]).range([0, 500]),  //盖帽
+				]
+				const bar_A = [data_A.gs,data_A.ast,data_A.reb,data_A.p3p*100,data_A.p1p*100,data_A.stl,data_A.tov,data_A.blk]
+				const bar_B = [data_B.gs,data_B.ast,data_B.reb,data_B.p3p*100,data_B.p1p*100,data_B.stl,data_B.tov,data_B.blk]
+				const highlight = []
+				for(var i=0; i<bar_A.length;i++){
+					if (bar_A[i]>=bar_B[i])
+						highlight.push(1);
+					else
+						highlight.push(0);
+				}
+				// 绘图
+				mainGroup.selectAll("rect.A_rect").data(bar_A).attr("class","A_rect").join("rect")
+				.attr("x", (d,i)=> rec_width)
+				.attr("y", (d,i)=>i*50+rec_height+28)
+				.attr("width",0)
+				.attr("height",30)
+				.attr("fill",function(d,i){
+					if (highlight[i])
+						return "#4169E1";
+					else
+						return "#B0C4DE"
+				})
+				.transition()
+				.duration(700) 
+				.ease(d3.easeLinear)
+				.attr("x", (d,i)=> rec_width-scalelist[i](d))
+				.attr("width",(d,i)=>scalelist[i](d))
+
+				mainGroup.selectAll("text.A_text").data(bar_A).attr("class","A_text").join("text")
+				.attr("x",(d,i)=> rec_width-scalelist[i](d)-10)
+				.attr("y", (d,i)=>i*50+rec_height+50)
+				.attr("text-anchor", "end")
+				.attr("font-size", '18px')
+				.attr("fill","black")
+				.text(d=>String(d.toFixed(1)))
+				.attr("opacity",0)
+				.transition()
+				.duration(700) 
+				.ease(d3.easeLinear)
+				.attr("opacity",1.0)
+				
+				mainGroup.selectAll("rect.B_rect").data(bar_B).attr("class","B_rect").join("rect")
+				.attr("x", rec_width+rec_midwidth)
+				.attr("y", (d,i)=>i*50+rec_height+28)
+				.attr("width",0)
+				.attr("height",30)
+				.attr("fill",function(d,i){
+					if (!highlight[i])
+						return "#4169E1";
+					else
+						return "#B0C4DE"
+				})
+				.transition()
+				.duration(700) 
+				.ease(d3.easeLinear)
+				.attr("width",(d,i)=>scalelist[i](d))
+
+
+				mainGroup.selectAll("text.B_text").data(bar_B).attr("class","B_text").join("text")
+				.attr("x",(d,i)=> rec_width+rec_midwidth+scalelist[i](d)+10)
+				.attr("y", (d,i)=>i*50+rec_height+50)
+				.attr("text-anchor", "start")
+				.attr("font-size", '18px')
+				.attr("fill","black")
+				.text(d=>String(d.toFixed(1)))
+				.attr("opacity",0)
+				.transition()
+				.duration(700) 
+				.ease(d3.easeLinear)
+				.attr("opacity",1.0)
+
+			})
+
+		})
+
+	}
+
+	// 监听
+	document.getElementsByClassName("seasonyear")[0].addEventListener("change", function() {
+		var teamA = document.getElementById("InputA").value
+		var teamB = document.getElementById("InputB").value
+		var year = document.getElementsByClassName("seasonyear")[0].value
+		year = parseInt(year)
+		if ((options.indexOf(teamA)!=-1) && (options.indexOf(teamB)!=-1)){
+			team_compa(teamA,teamB,year)
+		}
+	})
+
+	
+
+	
+</script>
+
+</body>
+</html>

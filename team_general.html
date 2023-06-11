@@ -1,0 +1,212 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>球队数据总览</title>
+<link href="css/style_trend.css" rel="stylesheet" type="text/css">
+  <script src="js/d3.min.js"></script>
+  <script src="js/d3-v6-tip.js"></script>
+  <script src="js/jquery-3.4.1.min.js"></script></head>
+  <link rel="stylesheet" href="css/d3-tip.css">
+
+<body>
+<header>
+<p><img src="imgs/nba-icon.png" alt="" height="50" align="center"/>&nbsp;球队数据统计</p>
+  <nav><a href="team_index.html">主页</a>&nbsp; &nbsp; 
+    <a class="general" href="team_trend.html">数据总览</a>&nbsp; &nbsp; 
+    <a class="trend" href="team_trend.html">数据趋势</a>&nbsp; &nbsp; 
+    <a class="shoot" href="team_shoot.html">投篮热区</a>&nbsp; &nbsp; 
+    <a class="vs" href="team_vs.html">球队对比</a></nav>
+</header>
+	<p>&nbsp;&nbsp;球队数据总览</p>
+
+    <div class="iconbg">
+        <div class="iconleft" style="float: left; width: 45%">
+			<img class="icon" src="imgs/ATL_logo.svg" width="180" alt=""/>
+		</div>
+        <div class="iconright" style="float: left; width: 45%">
+			<p class="icontext" name="teamname">亚特兰大 老鹰</p>
+			<p class="icontext"name="winlos">41胜-41负</p>
+		</div>
+    </div>
+  
+	<p></p>
+	<div class="table">
+	  <table class="DataTable">
+      <thead>
+        <tr>
+          <th onclick="sortTable(0)">赛季</th>
+          <th onclick="sortTable(1)">场数</th>
+          <th onclick="sortTable(2)">胜场</th>
+          <th onclick="sortTable(3)">负场</th>
+          <th onclick="sortTable(4)">胜率%</th>
+          <th onclick="sortTable(5)">得分</th>
+          <th onclick="sortTable(6)">投篮命中率%</th>
+          <th onclick="sortTable(7)">三分命中率%</th>
+          <th onclick="sortTable(8)">罚球命中率%</th>
+          <th onclick="sortTable(9)">篮板</th>
+          <th onclick="sortTable(10)">助攻</th>
+          <th onclick="sortTable(11)">失误</th>
+          <th onclick="sortTable(12)">抢断</th>
+          <th onclick="sortTable(13)">盖帽</th>
+			
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+	</div>
+  
+	
+
+<script>
+  var teamdict = {1:"ATL",2:"CHA",3:"MIA",4:"ORL",5:"WAS",6:"BOS",7:"BKN",8:"NYK",9:"PHI",10:"TOR",
+            11:"CHI",12:"CLE",13:"DET",14:"IND",15:"MIL",16:"DAL",17:"HOU",18:"MEM",19:"NOP",20:"SAS",
+            21:"DEN",22:"MIN",23:"OKC",24:"POR",25:"UTA",26:"GSW",27:"LAC",28:"LAL",29:"PHX",30:"SAC"};
+    // 获取teamid
+    var url_param = location.search;
+    if (url_param.indexOf("=") != -1){
+      teamid = url_param.split("=")[1];
+    }
+    else {
+      teamid = 1;
+    }
+    // 显示图标
+    team_str = teamdict[teamid]
+    console.log(location.search)
+    document.getElementsByClassName("icon")[0].src = "imgs/"+team_str+"_logo.svg"
+    // 参数修改
+    document.getElementsByClassName("general")[0].href = "team_general.html?teamid="+teamid.toString()
+    document.getElementsByClassName("trend")[0].href = "team_trend.html?teamid="+teamid.toString()
+    document.getElementsByClassName("vs")[0].href = "team_vs.html?teamid="+teamid.toString()
+    document.getElementsByClassName("shoot")[0].href = "team_shoot.html?teamid="+teamid.toString()
+
+    // read data
+    d3.json("teamdata/"+team_str+"_general.json").then(data=>{
+      // 参数修改
+      document.getElementsByName("teamname")[0].innerText = data.CN
+      document.getElementsByName("winlos")[0].innerText = String(data.winnum)+"胜-"+String(data.losnum)+"负 (本赛季)"
+      const general_data = data.general
+      function populateTable() {
+        var table = document.getElementsByClassName("DataTable")[0];
+        var tbody = table.querySelector("tbody");
+        
+        // 清空表格内容
+        tbody.innerHTML = "";
+
+        // 遍历数据集，创建表格行和单元格
+        for (var i = 0; i < general_data.length; i++) {
+          var row = document.createElement("tr");
+          
+          var yearCell = document.createElement("td");
+          yearCell.textContent = general_data[i].year;
+          row.appendChild(yearCell);
+
+          var gnumCell = document.createElement("td");
+          gnumCell.textContent = general_data[i].gnum;
+          row.appendChild(gnumCell);
+
+          var wnumCell = document.createElement("td");
+          wnumCell.textContent = general_data[i].wnum;
+          row.appendChild(wnumCell);
+
+          var lnumCell = document.createElement("td");
+          lnumCell.textContent = general_data[i].lnum;
+          row.appendChild(lnumCell);
+
+          var winpCell = document.createElement("td");
+          winpCell.textContent = (general_data[i].winp*100).toFixed(1);
+          row.appendChild(winpCell);
+
+          var gsCell = document.createElement("td");
+          gsCell.textContent = general_data[i].gs;
+          row.appendChild(gsCell);
+
+          var p2pCell = document.createElement("td");
+          p2pCell.textContent = (general_data[i].p2p*100).toFixed(1);
+          row.appendChild(p2pCell);
+
+          var p3pCell = document.createElement("td");
+          p3pCell.textContent = (general_data[i].p3p*100).toFixed(1);
+          row.appendChild(p3pCell);
+
+          var p1pCell = document.createElement("td");
+          p1pCell.textContent = (general_data[i].p1p*100).toFixed(1);
+          row.appendChild(p1pCell);
+   
+          var rebCell = document.createElement("td");
+          rebCell.textContent = general_data[i].reb;
+          row.appendChild(rebCell);   
+
+          var astCell = document.createElement("td");
+          astCell.textContent = general_data[i].ast;
+          row.appendChild(astCell);  
+
+          var tovCell = document.createElement("td");
+          tovCell.textContent = general_data[i].tov;
+          row.appendChild(tovCell);
+
+          var stlCell = document.createElement("td");
+          stlCell.textContent = general_data[i].stl;
+          row.appendChild(stlCell);   
+
+          var blkCell = document.createElement("td");
+          blkCell.textContent = general_data[i].blk;
+          row.appendChild(blkCell);   
+
+          tbody.appendChild(row);
+        }
+      }
+
+      // 初始化表格内容
+      populateTable();
+
+
+    })
+
+
+  function sortTable(columnIndex) {
+      var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+      table = document.getElementsByClassName("DataTable")[0];
+      switching = true;
+      dir = "asc"; // 默认为升序
+
+      while (switching) {
+        switching = false;
+        rows = table.getElementsByTagName("tr");
+
+        for (i = 1; i < (rows.length - 1); i++) {
+          shouldSwitch = false;
+          x = rows[i].getElementsByTagName("td")[columnIndex];
+          y = rows[i + 1].getElementsByTagName("td")[columnIndex];
+
+          if (dir === "asc") {
+            if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+              shouldSwitch = true;
+              break;
+            }
+          } else if (dir === "desc") {
+            if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+              shouldSwitch = true;
+              break;
+            }
+          }
+        }
+
+        if (shouldSwitch) {
+          rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+          switching = true;
+          switchcount++;
+        } else {
+          if (switchcount === 0 && dir === "asc") {
+            dir = "desc";
+            switching = true;
+          }
+        }
+      }
+    }
+
+
+</script>
+
+</body>
+</html>

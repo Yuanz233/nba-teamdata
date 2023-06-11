@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>球队数据总览</title>
+<link href="css/style_vs.css" rel="stylesheet" type="text/css">
+  <script src="js/d3.min.js"></script>
+  <script src="js/d3-v6-tip.js"></script>
+  <script src="js/jquery-3.4.1.min.js"></script></head>
+  <link rel="stylesheet" href="css/d3-tip.css">
+
+<body>
+<header>
+<p><img src="imgs/nba-icon.png" alt="" height="50" align="center"/>&nbsp;球队数据统计</p>
+  <nav><a href="team_index.html">主页</a>&nbsp; &nbsp; 
+    <a class="general" href="team_trend.html">数据总览</a>&nbsp; &nbsp; 
+    <a class="trend" href="team_trend.html">数据趋势</a>&nbsp; &nbsp; 
+    <a class="shoot" href="team_shoot.html">投篮热区</a>&nbsp; &nbsp; 
+    <a class="vs" href="team_vs.html">球队对比</a></nav>
+</header>
+	<p>&nbsp;&nbsp;球队数据总览</p>
+
+    <div class="iconbg">
+        <div class="iconleft" style="float: left; width: 45%">
+			<img class="icon" src="imgs/ATL_logo.svg" width="180" alt=""/>
+		</div>
+        <div class="iconright" style="float: left; width: 45%">
+			<p class="icontext" name="teamname">亚特兰大 老鹰</p>
+			<p class="icontext"name="winlos">41胜-41负</p>
+		</div>
+    </div>
+  
+	<p></p>
+  <p class="icontext">
+		&nbsp; &nbsp; &nbsp; &nbsp; 赛季年份：
+  		<select class="seasonyear">
+        <option value="2022">2022</option>
+        <option value="2021">2021</option>
+        <option value="2020">2020</option>
+        <option value="2019">2019</option>
+        <option value="2018">2018</option>
+        <option value="2017">2017</option>
+        <option value="2016">2016</option>
+        <option value="2015">2015</option>
+        <option value="2014">2014</option>
+        <option value="2013">2013</option>
+        <option value="2012">2012</option>
+        <option value="2011">2011</option>
+        <option value="2010">2010</option>
+        <option value="2009">2009</option>
+        <option value="2008">2008</option>
+        <option value="2007">2007</option>
+        <option value="2006">2006</option>
+        <option value="2005">2005</option>
+        <option value="2004">2004</option>
+	    </select>
+    </p>
+  <svg width="1700" height="800" id="mainsvg" class="svgs"></svg>
+	
+
+<script>
+  var teamdict = {1:"ATL",2:"CHA",3:"MIA",4:"ORL",5:"WAS",6:"BOS",7:"BKN",8:"NYK",9:"PHI",10:"TOR",
+            11:"CHI",12:"CLE",13:"DET",14:"IND",15:"MIL",16:"DAL",17:"HOU",18:"MEM",19:"NOP",20:"SAS",
+            21:"DEN",22:"MIN",23:"OKC",24:"POR",25:"UTA",26:"GSW",27:"LAC",28:"LAL",29:"PHX",30:"SAC"};
+    // 获取teamid
+    var url_param = location.search;
+    if (url_param.indexOf("=") != -1){
+      teamid = url_param.split("=")[1];
+    }
+    else {
+      teamid = 1;
+    }
+    // 显示图标
+    team_str = teamdict[teamid]
+    console.log(location.search)
+    document.getElementsByClassName("icon")[0].src = "imgs/"+team_str+"_logo.svg"
+    // 参数修改
+    document.getElementsByClassName("general")[0].href = "team_general.html?teamid="+teamid.toString()
+    document.getElementsByClassName("trend")[0].href = "team_trend.html?teamid="+teamid.toString()
+    document.getElementsByClassName("vs")[0].href = "team_vs.html?teamid="+teamid.toString()
+    document.getElementsByClassName("shoot")[0].href = "team_shoot.html?teamid="+teamid.toString()
+
+    // read data
+    // d3.json("teamdata/"+team_str+"_general.json").then(data=>{
+    //   // 参数修改
+    //   document.getElementsByName("teamname")[0].innerText = data.CN
+    //   document.getElementsByName("winlos")[0].innerText = String(data.winnum)+"胜-"+String(data.losnum)+"负 (本赛季)"
+    //   const general_data = data.general
+        
+       
+
+    //})
+
+
+
+
+</script>
+
+</body>
+</html>
