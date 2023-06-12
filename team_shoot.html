@@ -18,7 +18,7 @@
     <a class="shoot" href="team_shoot.html">投篮热区</a>&nbsp; &nbsp; 
     <a class="vs" href="team_vs.html">球队对比</a></nav>
 </header>
-	<p>&nbsp;&nbsp;球队数据总览</p>
+	<p>&nbsp;&nbsp;投篮热区数据</p>
 
     <div class="iconbg">
         <div class="iconleft" style="float: left; width: 45%">
@@ -80,16 +80,241 @@
     document.getElementsByClassName("vs")[0].href = "team_vs.html?teamid="+teamid.toString()
     document.getElementsByClassName("shoot")[0].href = "team_shoot.html?teamid="+teamid.toString()
 
+    // 绘图
+    const svg = d3.select("svg")
+    const margin = {top: 50, right: 300, bottom: 100, left: 200};
+    const innerWidth = svg.attr("width") - margin.left - margin.right;
+    const innerHeight = svg.attr("height") - margin.top - margin.bottom;
+    const mainGroup = svg.append('g')
+    .attr('transform', `translate(${margin.left}, ${margin.top})`)
+
+    const scale = 2.5;
+    const pathscale = d=>d*scale;
+    const trans_x = 60;
+    const trans_y = 20;
+    const text_x = 20;
+    const text_y = 50;
+    const scale_value = [40,50,70]
+    const scale_color = ["#D3D3D3","#FFA500","#F08080"]
+    const colorscale = d3.scaleLinear().domain(scale_value).range(scale_color)
+
+    // 区域
+    ra_path = `M${pathscale(50)},${pathscale(0)} L${pathscale(100)},${pathscale(0)} L${pathscale(100)},${pathscale(58)} L${pathscale(50)},${pathscale(58)} Z`
+    md_path = `M${pathscale(10)},${pathscale(0)} L${pathscale(10)},${pathscale(20)} A${pathscale(65)},${pathscale(65)},0,0,0,${pathscale(140)},${pathscale(20)}
+               L${pathscale(140)},${pathscale(0)} L${pathscale(100)},${pathscale(0)} L${pathscale(100)},${pathscale(58)} L${pathscale(50)},${pathscale(58)} 
+               L${pathscale(50)},${pathscale(0)} Z`
+    l3_path = `M${pathscale(0)},${pathscale(0)} L${pathscale(10)},${pathscale(0)} L${pathscale(10)},${pathscale(20)}
+               A${pathscale(65)},${pathscale(65)},0,0,0,${pathscale(57.42)},${pathscale(140-57.42)} L${pathscale(0)},${pathscale(140)} Z`
+    r3_path = `M${pathscale(150)},${pathscale(0)} L${pathscale(140)},${pathscale(0)} L${pathscale(140)},${pathscale(20)}
+               A${pathscale(65)},${pathscale(65)},0,0,1,${pathscale(150-57.42)},${pathscale(140-57.42)} L${pathscale(150)},${pathscale(140)} Z`
+    ab_path = `M${pathscale(57.42)},${pathscale(140-57.42)} A${pathscale(65)},${pathscale(65)},0,0,0,${pathscale(150-57.42)},${pathscale(140-57.42)} 
+               L${pathscale(150)},${pathscale(140)} L${pathscale(0)},${pathscale(140)} Z`
+    add1_path = `M${pathscale(52)},${pathscale(58)} A${pathscale(23)},${pathscale(23)},0,0,0,${pathscale(98)},${pathscale(58)} Z`
+    add2_path = `M${pathscale(55)},${pathscale(140)} A${pathscale(20)},${pathscale(20)},0,1,0,${pathscale(55)},${pathscale(139.9)} Z`
+    add3_path = `M${pathscale(0)},${pathscale(140)} L${pathscale(0)},${pathscale(140+18)}`
+    add4_path = `M${pathscale(150)},${pathscale(140)} L${pathscale(150)},${pathscale(140+18)}`
+
     // read data
-    // d3.json("teamdata/"+team_str+"_general.json").then(data=>{
-    //   // 参数修改
-    //   document.getElementsByName("teamname")[0].innerText = data.CN
-    //   document.getElementsByName("winlos")[0].innerText = String(data.winnum)+"胜-"+String(data.losnum)+"负 (本赛季)"
-    //   const general_data = data.general
+    d3.json("teamdata/"+team_str+"_shoot.json").then(data=>{
+      // 参数修改
+      document.getElementsByName("teamname")[0].innerText = data.CN
+      document.getElementsByName("winlos")[0].innerText = String(data.winnum)+"胜-"+String(data.losnum)+"负 (本赛季)"
+      const shoot_data = data.shoot
+      const avg_data = data.avg
+      console.log(shoot_data)
+      function shoot_svg(year) {
+        mainGroup.selectAll("*").remove()
+        r3_area = mainGroup.append("path")
+        .attr("d", "M650,20 L650,420")
+        .attr("stroke","grey")
+        .attr("stroke-width",2)
+        .attr("fill","none")
+        var tmp_shoot = shoot_data.find(item=>item.year===parseInt(year))
+        var tmp_avg = avg_data.find(item=>item.year===parseInt(year))
+        ra_area = mainGroup.append("path")
+        .attr("d", ra_path)
+        .attr("stroke","black")
+        .attr("stroke-width",3)
+        .attr("fill","none")
+        .attr("transform",`translate(${trans_x},${trans_y})`)
+        md_area = mainGroup.append("path")
+        .attr("d", md_path)
+        .attr("stroke","black")
+        .attr("stroke-width",3)
+        .attr("fill","none")
+        .attr("transform",`translate(${trans_x},${trans_y})`)
+        l3_area = mainGroup.append("path")
+        .attr("d", l3_path)
+        .attr("stroke","black")
+        .attr("stroke-width",3)
+        .attr("fill","none")
+        .attr("transform",`translate(${trans_x},${trans_y})`)
+        r3_area = mainGroup.append("path")
+        .attr("d", r3_path)
+        .attr("stroke","black")
+        .attr("stroke-width",3)
+        .attr("fill","none")
+        .attr("transform",`translate(${trans_x},${trans_y})`)
+        ab_area = mainGroup.append("path")
+        .attr("d", ab_path)
+        .attr("stroke","black")
+        .attr("stroke-width",3)
+        .attr("fill","none")
+        .attr("transform",`translate(${trans_x},${trans_y})`)
+        add1_area = mainGroup.append("path")
+        .attr("d", add1_path)
+        .attr("stroke","black")
+        .attr("stroke-width",3)
+        .attr("fill","none")
+        .attr("transform",`translate(${trans_x},${trans_y})`)
+        add2_area = mainGroup.append("path")
+        .attr("d", add2_path)
+        .attr("stroke","black")
+        .attr("stroke-width",3)
+        .attr("fill","none")
+        .attr("transform",`translate(${trans_x},${trans_y})`)
+        add3_area = mainGroup.append("path")
+        .attr("d", add3_path)
+        .attr("stroke","black")
+        .attr("stroke-width",3)
+        .attr("fill","none")
+        .attr("transform",`translate(${trans_x},${trans_y})`)
+        add4_area = mainGroup.append("path")
+        .attr("d", add4_path)
+        .attr("stroke","black")
+        .attr("stroke-width",3)
+        .attr("fill","none")
+        .attr("transform",`translate(${trans_x},${trans_y})`)
+
+        // text
+        mainGroup.append("text").attr('x',800).attr('y',0).attr("text-anchor", "start")
+				.attr("font-size", '25px')
+				.attr("fill","#696969")
+				.text("投篮区域")
+        .attr("transform",`translate(${text_x},${text_y})`)
+        area_text = mainGroup.append("text").attr('x',810).attr('y',50).attr("text-anchor", "start")
+				.attr("font-size", '30px')
+				.attr("fill","black")
+				.text("总计")
+        .attr("transform",`translate(${text_x},${text_y})`)
+        mainGroup.append("text").attr('x',800).attr('y',110).attr("text-anchor", "start")
+				.attr("font-size", '25px')
+				.attr("fill","#696969")
+				.text("常规赛表现 ("+String(year)+")")
+        .attr("transform",`translate(${text_x},${text_y})`)
+        team_text = mainGroup.append("text").attr('x',810).attr('y',160).attr("text-anchor", "start")
+				.attr("font-size", '30px')
+				.attr("fill","black")
+				.text(String((tmp_shoot.allavg*100).toFixed(1))+"%")
+        .attr("transform",`translate(${text_x},${text_y})`)
+        mainGroup.append("text").attr('x',800).attr('y',220).attr("text-anchor", "start")
+				.attr("font-size", '25px')
+				.attr("fill","#696969")
+				.text("联盟平均 ("+String(year)+")")
+        .attr("transform",`translate(${text_x},${text_y})`)
+        avg_text = mainGroup.append("text").attr('x',810).attr('y',270).attr("text-anchor", "start")
+				.attr("font-size", '30px')
+				.attr("fill","black")
+				.text(String((tmp_avg.allavg*100).toFixed(1))+"%")
+        .attr("transform",`translate(${text_x},${text_y})`)
+        // area
+        ra_area.attr("fill",colorscale(tmp_shoot.ra*100))
+        .on("mouseover",function(){
+          mover(ra_area,ra_text,"三秒区",String((tmp_shoot.ra*100).toFixed(1))+"%",String((tmp_avg.ra*100).toFixed(1))+"%",ra_path)
+        })
+        .on("mouseout",function(){
+          mout(ra_area,ra_text)
+        })
+        md_area.attr("fill",colorscale(tmp_shoot.md*100))
+        .on("mouseover",function(){
+          mover(md_area,md_text,"中距离",String((tmp_shoot.md*100).toFixed(1))+"%",String((tmp_avg.md*100).toFixed(1))+"%",md_path)
+        })
+        .on("mouseout",function(){
+          mout(md_area,md_text)
+        })
+        l3_area.attr("fill",colorscale(tmp_shoot.l3*100))
+        .on("mouseover",function(){
+          mover(l3_area,l3_text,"左侧三分线外",String((tmp_shoot.l3*100).toFixed(1))+"%",String((tmp_avg.l3*100).toFixed(1))+"%",l3_path)
+        })
+        .on("mouseout",function(){
+          mout(l3_area,l3_text)
+        })
+        r3_area.attr("fill",colorscale(tmp_shoot.r3*100))
+        .on("mouseover",function(){
+          mover(r3_area,r3_text,"右侧三分线外",String((tmp_shoot.r3*100).toFixed(1))+"%",String((tmp_avg.r3*100).toFixed(1))+"%",r3_path)
+        })
+        .on("mouseout",function(){
+          mout(r3_area,r3_text)
+        })
+        ab_area.attr("fill",colorscale(tmp_shoot.ab*100))
+        .on("mouseover",function(){
+          mover(ab_area,ab_text,"弧顶三分线外",String((tmp_shoot.ab*100).toFixed(1))+"%",String((tmp_avg.ab*100).toFixed(1))+"%",ab_path)
+        })
+        .on("mouseout",function(){
+          mout(ab_area,ab_text)
+        })
+        // text in area
+        ra_text = mainGroup.append("text").attr('x',pathscale(75)).attr('y',pathscale(30)).attr("text-anchor", "middle")
+				.attr("font-size", '20px')
+				.attr("fill","black")
+				.text(String((tmp_shoot.ra*100).toFixed(1))+"%")
+        .attr("transform",`translate(${trans_x},${trans_y})`)
+        md_text = mainGroup.append("text").attr('x',pathscale(120)).attr('y',pathscale(30)).attr("text-anchor", "middle")
+				.attr("font-size", '20px')
+				.attr("fill","black")
+				.text(String((tmp_shoot.md*100).toFixed(1))+"%")
+        .attr("transform",`translate(${trans_x},${trans_y})`)
+        l3_text = mainGroup.append("text").attr('x',pathscale(20)).attr('y',pathscale(90)).attr("text-anchor", "middle")
+				.attr("font-size", '20px')
+				.attr("fill","black")
+				.text(String((tmp_shoot.l3*100).toFixed(1))+"%")
+        .attr("transform",`translate(${trans_x},${trans_y})`)
+        r3_text = mainGroup.append("text").attr('x',pathscale(130)).attr('y',pathscale(90)).attr("text-anchor", "middle")
+				.attr("font-size", '20px')
+				.attr("fill","black")
+				.text(String((tmp_shoot.r3*100).toFixed(1))+"%")
+        .attr("transform",`translate(${trans_x},${trans_y})`)
+        ab_text = mainGroup.append("text").attr('x',pathscale(75)).attr('y',pathscale(110)).attr("text-anchor", "middle")
+				.attr("font-size", '20px')
+				.attr("fill","black")
+				.text(String((tmp_shoot.ab*100).toFixed(1))+"%")
+        .attr("transform",`translate(${trans_x},${trans_y})`)
+
+        // 鼠标事件
+        function mover(area,text_in,text_area_fill,text_team_fill,text_avg_fill,path) {
+          mainGroup.append("path")
+          .attr("class","edge")
+          .attr("d", path)
+          .attr("stroke","#00BFFF")
+          .attr("stroke-width",5)
+          .attr("fill","none")
+          .attr("transform",`translate(${trans_x},${trans_y})`)
+          text_in.attr("font-size", '25px')
+          area_text.text(text_area_fill)
+          team_text.text(text_team_fill)
+          avg_text.text(text_avg_fill)
+        }
+        function mout(area,text_in) {
+          d3.selectAll("path.edge").remove()
+          text_in.attr("font-size", '20px')
+          area_text.text("总计")
+          team_text.text(String((tmp_shoot.allavg*100).toFixed(1))+"%")
+          avg_text.text(String((tmp_avg.allavg*100).toFixed(1))+"%")
+        }
+        
+      }
+
+      var year = parseInt(document.getElementsByClassName("seasonyear")[0].value)
+      shoot_svg(year)
+
+      document.getElementsByClassName("seasonyear")[0].addEventListener("change", function() {
+        year = parseInt(document.getElementsByClassName("seasonyear")[0].value)
+        shoot_svg(year)
+      })
         
        
 
-    //})
+    })
 
 
 

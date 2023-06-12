@@ -82,7 +82,7 @@
 			<option value="points">得分</option>
 			<option value="win">胜率</option>
 			<option value="ptsp">得分构成</option>
-			<option value="rebound">篮板</option>
+			<option value="rebound">出手方式</option>
 	    </select>
 
   </p>
@@ -457,151 +457,1030 @@
 		}
 
 		//得分构成
-		var ptsp_svg = function(d) {
-			mainGroup.selectAll("*").remove()
-			const xValue = d=>d.year
-			const p3Value = d=>d.ptp3
-			const p2Value = d=>d.ptp2
-			const p1Value = d=>d.ptp1
-			const p3avgValue = d=>d.ptp3avg
-			xScale.domain([start_year-0.9,end_year+0.9]).range([0, innerWidth])
-			yScale.domain([0,100]).range([innerHeight, 0])
-			const xAxis = d3.axisBottom(xScale).ticks(end_year-start_year+1).tickFormat(d => d)
-			const yAxis = d3.axisLeft(yScale).tickSize(-innerWidth).ticks(13)
-			// tip
-			const tip = d3.tip().attr('class','d3-tip').html(function(event,d) {return String((d.ptp3avg*100).toFixed(1))+"%"})
-			mainGroup.call(tip)
-			const tipele = document.getElementsByClassName('d3-tip')[0]
+		var ptsp_svg = function(d_p,d_abs) {
 
-			const xAxisGroup = mainGroup.append('g').attr('id', 'xAxisGroup').call(xAxis)
-			.attr('transform', `translate(0, ${innerHeight})`)
-			const yAxisGroup = mainGroup.append('g').attr('id', 'yAxisGroup').call(yAxis)
-			xAxisGroup.attr('transform', `translate(${0}, ${innerHeight})`)
-			// font-size of texts of axes: 
-			d3.selectAll('.tick text').attr('font-size', '20px')
-			// titles of axes: 
-			xAxisGroup.append('text').attr('class', 'axisTitle').text('年份')
-				.attr('x', innerWidth/2).attr('y', 60);
-			yAxisGroup.append('text').attr('class', 'axisTitle').text('得分占比 %')
-				.attr('transform', 'rotate(-90)').attr('x', -innerHeight/2).attr('y', -60);
-		
-			d3.selectAll('.axisTitle').attr('text-anchor', "middle").attr('fill', 'black').attr('font-size', '25px')
+			function ptsp_p (d) {
+				mainGroup.selectAll("*").remove()
+				const xValue = d=>d.year
+				const p3Value = d=>d.ptp3
+				const p2Value = d=>d.ptp2
+				const p1Value = d=>d.ptp1
+				const p3avgValue = d=>d.ptp3avg
+				xScale.domain([start_year-0.9,end_year+0.9]).range([0, innerWidth])
+				yScale.domain([0,100]).range([innerHeight, 0])
+				const xAxis = d3.axisBottom(xScale).ticks(end_year-start_year+1).tickFormat(d => d)
+				const yAxis = d3.axisLeft(yScale).tickSize(-innerWidth).ticks(13)
+				// tip
+				const tip = d3.tip().attr('class','d3-tip').html(function(event,d) {return String((d.ptp3avg*100).toFixed(1))+"%"})
+				mainGroup.call(tip)
+				const tipele = document.getElementsByClassName('d3-tip')[0]
 
-			const naiveKeys = ["ptp3", "ptp2", "ptp1"]
-			var naiveStack = d3.stack()
-			.keys(naiveKeys)
-			.order(d3.stackOrderNone)(d);
-
-			console.log(naiveStack)
-
-			//const colors = ["#FF00FF", "#FFD700", "#3CB371"]
-			const colors = ["#00BFFF", "#98FB98","#FFD700"]
-
-			const bandwidth = 0.6*(xScale(end_year)-xScale(start_year))/(end_year-start_year)
-
-			var bar = mainGroup.selectAll('.datagroup').data(naiveStack).join('g')
-			.attr('class', 'datagroup')
-			.attr('fill', (d,i) => colors[i])
-			.selectAll('.datarect').data(d => d).join('rect')
-			.attr('class', 'datarect')
-			.attr('x', d => xScale(xValue(d.data))-bandwidth/2)
-			.attr('y', innerHeight)
-			.transition()
-			.duration(1000)
-			.delay((d, i) => i * 50) 
-			.attr('y', d => yScale(d[1]*100))
-			.attr('height', d => yScale(d[0]*100) - yScale(d[1]*100))
-			.attr('width', bandwidth)
-			.attr("opacity",0.8)
-
-			var p3avgline = d3.line()
-			.x(d => {return xScale(xValue(d))})
-			.y(d => {return yScale(p3avgValue(d)*100)})
-			.curve(d3.curveCardinal.tension(0.99))
-
-			p3avgpath = mainGroup.append('path').attr('id', 'mainPath').datum(d)
-				.attr('d', p3avgline).attr('fill', 'none').attr('stroke', 'black')
-				.attr("stroke-width",3)
-			const p3avgpath_L = p3avgpath.node().getTotalLength()
-			p3avgpath.attr('stroke-dasharray', p3avgpath_L) 
-  			.attr('stroke-dashoffset', p3avgpath_L) 
-			p3avgpath.transition()
-			.duration(1000) 
-			.attr('stroke-dashoffset', 0)
-			.ease(d3.easeLinear)
-
-			mainGroup.selectAll('dataCircles').data(d).join('circle')
-				.attr('cx', d => xScale(xValue(d))).attr('cy', d => yScale(p3avgValue(d)*100)).attr('r', 8)
-				.attr('stroke-width', 2).attr('stroke', '#8B0000').attr('fill', '#8B0000').attr('opacity', 0.6)
-				.on('mouseover', function(event, d){
-				d3.select(this).attr('stroke', '#38eff2');
-				tip.show(event,d)
-				d3.select('.d3-tip')
-				.style('top', `${event.y + $(window).scrollTop() - tipele.offsetHeight - 10}px`)
-				.style('left', `${event.x + $(window).scrollLeft() - tipele.offsetWidth / 2}px`)
-			})
-				.on('mouseout', function(event, d){
-				d3.select(this).attr('stroke', '#364747');
-				tip.hide(event,d)
-			})
-				.on('click', function(event, d){
-				let c = d3.select(this);
-				renderPie(this.__data__.num, c.attr('cx'), c.attr('cy')); 
-				// event.stopPropagation();
-			}); 
-
-			// 图例
-			legdata = ["三分球占比","两分球占比","罚球占比"]
-			var legend = mainGroup.selectAll(".legend")
-			.data(legdata).join('g')
-			.attr("class", "legend")
-			.attr("transform", (d, i) => `translate(${innerWidth+50},${(i * 40)})`);
-
-			// draw legend colored rectangles
-			legend.append("rect")
-				.attr("x", 0)
-				.attr("y", 0)
-				.attr("width", 30)
-				.attr("height", 30)
-				.style("fill", (d,i)=>colors[i]);
+				const xAxisGroup = mainGroup.append('g').attr('id', 'xAxisGroup').call(xAxis)
+				.attr('transform', `translate(0, ${innerHeight})`)
+				const yAxisGroup = mainGroup.append('g').attr('id', 'yAxisGroup').call(yAxis)
+				xAxisGroup.attr('transform', `translate(${0}, ${innerHeight})`)
+				// font-size of texts of axes: 
+				d3.selectAll('.tick text').attr('font-size', '20px')
+				// titles of axes: 
+				xAxisGroup.append('text').attr('class', 'axisTitle').text('年份')
+					.attr('x', innerWidth/2).attr('y', 60);
+				yAxisGroup.append('text').attr('class', 'axisTitle').text('得分占比 %')
+					.attr('transform', 'rotate(-90)').attr('x', -innerHeight/2).attr('y', -60);
 			
-			mainGroup.append("rect")
-				.attr("x", -10)
-				.attr("y", 0)
-				.attr("width", 50)
-				.attr("height", 3)
-				.style("fill", "black")
-				.attr("transform",`translate(${innerWidth+50},${(135)})`)
-			mainGroup.append("circle")
-				.attr("cx", 15)
-				.attr("cy", 2)
-				.attr("r", 8)
-				.attr('stroke-width', 2)
-				.attr('stroke', '#8B0000')
-				.attr('fill', '#8B0000')
-				.attr('opacity', 0.6)
-				.attr("transform", `translate(${innerWidth+50},${135})`)
-			
-			mainGroup.append("text")
-				.attr("x", 50)
-				.attr("y", 13)
-				.attr("dy", ".45em")
-				.attr("text-anchor", "start")
-				.attr("font-size", '20px')
-				.text("三分球占比(联盟平均)")
-				.attr("transform",`translate(${innerWidth+50},${(120)})`)
+				d3.selectAll('.axisTitle').attr('text-anchor', "middle").attr('fill', 'black').attr('font-size', '25px')
 
+				const naiveKeys = ["ptp3", "ptp2", "ptp1"]
+				var naiveStack = d3.stack()
+				.keys(naiveKeys)
+				.order(d3.stackOrderNone)(d);
+
+				console.log(naiveStack)
+
+				//const colors = ["#FF00FF", "#FFD700", "#3CB371"]
+				const colors = ["#00BFFF", "#98FB98","#FFD700"]
+
+				const bandwidth = 0.6*(xScale(end_year)-xScale(start_year))/(end_year-start_year)
+
+				var bar = mainGroup.selectAll('.datagroup').data(naiveStack).join('g')
+				.attr('class', 'datagroup')
+				.attr('fill', (d,i) => colors[i])
+				.selectAll('.datarect').data(d => d).join('rect')
+				.attr('class', 'datarect')
+				.attr('x', d => xScale(xValue(d.data))-bandwidth/2)
+				.attr('y', innerHeight)
+				.transition()
+				.duration(1000)
+				.delay((d, i) => i * 50) 
+				.attr('y', d => yScale(d[1]*100))
+				.attr('height', d => yScale(d[0]*100) - yScale(d[1]*100))
+				.attr('width', bandwidth)
+				.attr("opacity",0.8)
+
+				var p3avgline = d3.line()
+				.x(d => {return xScale(xValue(d))})
+				.y(d => {return yScale(p3avgValue(d)*100)})
+				.curve(d3.curveCardinal.tension(0.99))
+
+				p3avgpath = mainGroup.append('path').attr('id', 'mainPath').datum(d)
+					.attr('d', p3avgline).attr('fill', 'none').attr('stroke', 'black')
+					.attr("stroke-width",3)
+				const p3avgpath_L = p3avgpath.node().getTotalLength()
+				p3avgpath.attr('stroke-dasharray', p3avgpath_L) 
+				.attr('stroke-dashoffset', p3avgpath_L) 
+				p3avgpath.transition()
+				.duration(1000) 
+				.attr('stroke-dashoffset', 0)
+				.ease(d3.easeLinear)
+
+				mainGroup.selectAll('dataCircles').data(d).join('circle')
+					.attr('cx', d => xScale(xValue(d))).attr('cy', d => yScale(p3avgValue(d)*100)).attr('r', 8)
+					.attr('stroke-width', 2).attr('stroke', '#8B0000').attr('fill', '#8B0000').attr('opacity', 0.6)
+					.on('mouseover', function(event, d){
+					d3.select(this).attr('stroke', '#38eff2');
+					tip.show(event,d)
+					d3.select('.d3-tip')
+					.style('top', `${event.y + $(window).scrollTop() - tipele.offsetHeight - 10}px`)
+					.style('left', `${event.x + $(window).scrollLeft() - tipele.offsetWidth / 2}px`)
+				})
+					.on('mouseout', function(event, d){
+					d3.select(this).attr('stroke', '#364747');
+					tip.hide(event,d)
+				})
+					.on('click', function(event, d){
+					let c = d3.select(this);
+					renderPie(this.__data__.num, c.attr('cx'), c.attr('cy')); 
+					// event.stopPropagation();
+				}); 
+
+				// 图例
+				legdata = ["三分球","两分球","罚球"]
+				var legend = mainGroup.selectAll(".legend")
+				.data(legdata).join('g')
+				.attr("class", "legend")
+				.attr("transform", (d, i) => `translate(${innerWidth+50},${(i * 40)})`);
+
+				legend.append("rect")
+					.attr("x", 0)
+					.attr("y", 0)
+					.attr("width", 30)
+					.attr("height", 30)
+					.style("fill", (d,i)=>colors[i]);
+				
+				mainGroup.append("rect")
+					.attr("x", -10)
+					.attr("y", 0)
+					.attr("width", 50)
+					.attr("height", 3)
+					.style("fill", "black")
+					.attr("transform",`translate(${innerWidth+50},${(135)})`)
+				mainGroup.append("circle")
+					.attr("cx", 15)
+					.attr("cy", 2)
+					.attr("r", 8)
+					.attr('stroke-width', 2)
+					.attr('stroke', '#8B0000')
+					.attr('fill', '#8B0000')
+					.attr('opacity', 0.6)
+					.attr("transform", `translate(${innerWidth+50},${135})`)
+				
+				mainGroup.append("text")
+					.attr("x", 50)
+					.attr("y", 13)
+					.attr("dy", ".45em")
+					.attr("text-anchor", "start")
+					.attr("font-size", '20px')
+					.text("三分球(联盟平均)")
+					.attr("transform",`translate(${innerWidth+50},${(120)})`)
+
+				legend.append("text")
+					.attr("x", 50)
+					.attr("y", 13)
+					.attr("dy", ".45em")
+					.attr("text-anchor", "start")
+					.attr("font-size", '20px')
+					.text(d => d[0].toUpperCase()+d.slice(1)); 
+
+				// button
+				mainGroup.append("rect")
+					.attr("x", 0)
+					.attr("y", 450)
+					.attr("width", 70)
+					.attr("height", 30)
+					.attr("stroke","black")
+					.style("fill", "#6495ED")
+					.attr("transform", `translate(${innerWidth+50},${135})`)
+					.on("click", function(){
+						ptsp_abs(d_abs)
+					})
+				mainGroup.append("text")
+					.attr("x", 35)
+					.attr("y", 463)
+					.attr("dy", ".45em")
+					.attr("text-anchor", "middle")
+					.attr("font-size", '20px')
+					.attr("font-weight", "bold")
+					.attr("transform", `translate(${innerWidth+50},${135})`)
+					.text("绝对值")
+					.on("click", function(){
+						ptsp_abs(d_abs)
+					})
+
+			}
+			// 绝对值
+			function ptsp_abs (d) {
+				mainGroup.selectAll("*").remove()
+				const xValue = d=>d.year
+				const p3Value = d=>d.ptp3
+				const p2Value = d=>d.ptp2
+				const p1Value = d=>d.ptp1
+				const p3avgValue = d=>d.ptp3avg
+				xScale.domain([start_year-0.9,end_year+0.9]).range([0, innerWidth])
+				yScale.domain([0,130]).range([innerHeight, 0])
+				const xAxis = d3.axisBottom(xScale).ticks(end_year-start_year+1).tickFormat(d => d)
+				const yAxis = d3.axisLeft(yScale).tickSize(-innerWidth).ticks(13)
+				// tip
+				const tip = d3.tip().attr('class','d3-tip').html(function(event,d) {return String((d.ptp3avg))})
+				mainGroup.call(tip)
+				const tipele = document.getElementsByClassName('d3-tip')[0]
+
+				const xAxisGroup = mainGroup.append('g').attr('id', 'xAxisGroup').call(xAxis)
+				.attr('transform', `translate(0, ${innerHeight})`)
+				const yAxisGroup = mainGroup.append('g').attr('id', 'yAxisGroup').call(yAxis)
+				xAxisGroup.attr('transform', `translate(${0}, ${innerHeight})`)
+				// font-size of texts of axes: 
+				d3.selectAll('.tick text').attr('font-size', '20px')
+				// titles of axes: 
+				xAxisGroup.append('text').attr('class', 'axisTitle').text('年份')
+					.attr('x', innerWidth/2).attr('y', 60);
+				yAxisGroup.append('text').attr('class', 'axisTitle').text('得分')
+					.attr('transform', 'rotate(-90)').attr('x', -innerHeight/2).attr('y', -60);
 			
-			// draw legend text
-			legend.append("text")
-				.attr("x", 50)
-				.attr("y", 13)
-				.attr("dy", ".45em")
-				.attr("text-anchor", "start")
-				.attr("font-size", '20px')
-				.text(d => d[0].toUpperCase()+d.slice(1)); 
+				d3.selectAll('.axisTitle').attr('text-anchor', "middle").attr('fill', 'black').attr('font-size', '25px')
+
+				const naiveKeys = ["ptp3", "ptp2", "ptp1"]
+				var naiveStack = d3.stack()
+				.keys(naiveKeys)
+				.order(d3.stackOrderNone)(d);
+
+				console.log(naiveStack)
+
+				//const colors = ["#FF00FF", "#FFD700", "#3CB371"]
+				const colors = ["#00BFFF", "#98FB98","#FFD700"]
+
+				const bandwidth = 0.6*(xScale(end_year)-xScale(start_year))/(end_year-start_year)
+
+				var bar = mainGroup.selectAll('.datagroup').data(naiveStack).join('g')
+				.attr('class', 'datagroup')
+				.attr('fill', (d,i) => colors[i])
+				.selectAll('.datarect').data(d => d).join('rect')
+				.attr('class', 'datarect')
+				.attr('x', d => xScale(xValue(d.data))-bandwidth/2)
+				.attr('y', innerHeight)
+				.transition()
+				.duration(1000)
+				.delay((d, i) => i * 50) 
+				.attr('y', d => yScale(d[1]))
+				.attr('height', d => yScale(d[0]) - yScale(d[1]))
+				.attr('width', bandwidth)
+				.attr("opacity",0.8)
+
+				var p3avgline = d3.line()
+				.x(d => {return xScale(xValue(d))})
+				.y(d => {return yScale(p3avgValue(d))})
+				.curve(d3.curveCardinal.tension(0.99))
+
+				p3avgpath = mainGroup.append('path').attr('id', 'mainPath').datum(d)
+					.attr('d', p3avgline).attr('fill', 'none').attr('stroke', 'black')
+					.attr("stroke-width",3)
+				const p3avgpath_L = p3avgpath.node().getTotalLength()
+				p3avgpath.attr('stroke-dasharray', p3avgpath_L) 
+				.attr('stroke-dashoffset', p3avgpath_L) 
+				p3avgpath.transition()
+				.duration(1000) 
+				.attr('stroke-dashoffset', 0)
+				.ease(d3.easeLinear)
+
+				mainGroup.selectAll('dataCircles').data(d).join('circle')
+					.attr('cx', d => xScale(xValue(d))).attr('cy', d => yScale(p3avgValue(d))).attr('r', 8)
+					.attr('stroke-width', 2).attr('stroke', '#8B0000').attr('fill', '#8B0000').attr('opacity', 0.6)
+					.on('mouseover', function(event, d){
+					d3.select(this).attr('stroke', '#38eff2');
+					tip.show(event,d)
+					d3.select('.d3-tip')
+					.style('top', `${event.y + $(window).scrollTop() - tipele.offsetHeight - 10}px`)
+					.style('left', `${event.x + $(window).scrollLeft() - tipele.offsetWidth / 2}px`)
+				})
+					.on('mouseout', function(event, d){
+					d3.select(this).attr('stroke', '#364747');
+					tip.hide(event,d)
+				})
+					.on('click', function(event, d){
+					let c = d3.select(this);
+					renderPie(this.__data__.num, c.attr('cx'), c.attr('cy')); 
+					// event.stopPropagation();
+				}); 
+
+				// 图例
+				legdata = ["三分球","两分球","罚球"]
+				var legend = mainGroup.selectAll(".legend")
+				.data(legdata).join('g')
+				.attr("class", "legend")
+				.attr("transform", (d, i) => `translate(${innerWidth+50},${(i * 40)})`);
+
+				legend.append("rect")
+					.attr("x", 0)
+					.attr("y", 0)
+					.attr("width", 30)
+					.attr("height", 30)
+					.style("fill", (d,i)=>colors[i]);
+				
+				mainGroup.append("rect")
+					.attr("x", -10)
+					.attr("y", 0)
+					.attr("width", 50)
+					.attr("height", 3)
+					.style("fill", "black")
+					.attr("transform",`translate(${innerWidth+50},${(135)})`)
+				mainGroup.append("circle")
+					.attr("cx", 15)
+					.attr("cy", 2)
+					.attr("r", 8)
+					.attr('stroke-width', 2)
+					.attr('stroke', '#8B0000')
+					.attr('fill', '#8B0000')
+					.attr('opacity', 0.6)
+					.attr("transform", `translate(${innerWidth+50},${135})`)
+				
+				mainGroup.append("text")
+					.attr("x", 50)
+					.attr("y", 13)
+					.attr("dy", ".45em")
+					.attr("text-anchor", "start")
+					.attr("font-size", '20px')
+					.text("三分球(联盟平均)")
+					.attr("transform",`translate(${innerWidth+50},${(120)})`)
+
+				legend.append("text")
+					.attr("x", 50)
+					.attr("y", 13)
+					.attr("dy", ".45em")
+					.attr("text-anchor", "start")
+					.attr("font-size", '20px')
+					.text(d => d[0].toUpperCase()+d.slice(1)); 
+
+				// button
+				mainGroup.append("rect")
+					.attr("x", 0)
+					.attr("y", 450)
+					.attr("width", 70)
+					.attr("height", 30)
+					.attr("stroke","black")
+					.style("fill", "#6495ED")
+					.attr("transform", `translate(${innerWidth+50},${135})`)
+					.on("click", function(){
+						ptsp_p(d_p)
+					})
+				mainGroup.append("text")
+					.attr("x", 35)
+					.attr("y", 463)
+					.attr("dy", ".45em")
+					.attr("text-anchor", "middle")
+					.attr("font-size", '20px')
+					.attr("font-weight", "bold")
+					.attr("transform", `translate(${innerWidth+50},${135})`)
+					.text("百分比")
+					.on("click", function(){
+						ptsp_p(d_p)
+					})
+			}
+
+			ptsp_abs(d_abs);
 
 		}
+
+		//得分构成
+		var ptsp_svg = function(d_p,d_abs) {
+
+			function ptsp_p (d) {
+				mainGroup.selectAll("*").remove()
+				const xValue = d=>d.year
+				const p3Value = d=>d.ptp3
+				const p2Value = d=>d.ptp2
+				const p1Value = d=>d.ptp1
+				const p3avgValue = d=>d.ptp3avg
+				xScale.domain([start_year-0.9,end_year+0.9]).range([0, innerWidth])
+				yScale.domain([0,100]).range([innerHeight, 0])
+				const xAxis = d3.axisBottom(xScale).ticks(end_year-start_year+1).tickFormat(d => d)
+				const yAxis = d3.axisLeft(yScale).tickSize(-innerWidth).ticks(13)
+				// tip
+				const tip = d3.tip().attr('class','d3-tip').html(function(event,d) {return String((d.ptp3avg*100).toFixed(1))+"%"})
+				mainGroup.call(tip)
+				const tipele = document.getElementsByClassName('d3-tip')[0]
+
+				const xAxisGroup = mainGroup.append('g').attr('id', 'xAxisGroup').call(xAxis)
+				.attr('transform', `translate(0, ${innerHeight})`)
+				const yAxisGroup = mainGroup.append('g').attr('id', 'yAxisGroup').call(yAxis)
+				xAxisGroup.attr('transform', `translate(${0}, ${innerHeight})`)
+				// font-size of texts of axes: 
+				d3.selectAll('.tick text').attr('font-size', '20px')
+				// titles of axes: 
+				xAxisGroup.append('text').attr('class', 'axisTitle').text('年份')
+					.attr('x', innerWidth/2).attr('y', 60);
+				yAxisGroup.append('text').attr('class', 'axisTitle').text('得分占比 %')
+					.attr('transform', 'rotate(-90)').attr('x', -innerHeight/2).attr('y', -60);
+			
+				d3.selectAll('.axisTitle').attr('text-anchor', "middle").attr('fill', 'black').attr('font-size', '25px')
+
+				const naiveKeys = ["ptp3", "ptp2", "ptp1"]
+				var naiveStack = d3.stack()
+				.keys(naiveKeys)
+				.order(d3.stackOrderNone)(d);
+
+				console.log(naiveStack)
+
+				//const colors = ["#FF00FF", "#FFD700", "#3CB371"]
+				const colors = ["#00BFFF", "#98FB98","#FFD700"]
+
+				const bandwidth = 0.6*(xScale(end_year)-xScale(start_year))/(end_year-start_year)
+
+				var bar = mainGroup.selectAll('.datagroup').data(naiveStack).join('g')
+				.attr('class', 'datagroup')
+				.attr('fill', (d,i) => colors[i])
+				.selectAll('.datarect').data(d => d).join('rect')
+				.attr('class', 'datarect')
+				.attr('x', d => xScale(xValue(d.data))-bandwidth/2)
+				.attr('y', innerHeight)
+				.transition()
+				.duration(1000)
+				.delay((d, i) => i * 50) 
+				.attr('y', d => yScale(d[1]*100))
+				.attr('height', d => yScale(d[0]*100) - yScale(d[1]*100))
+				.attr('width', bandwidth)
+				.attr("opacity",0.8)
+
+				var p3avgline = d3.line()
+				.x(d => {return xScale(xValue(d))})
+				.y(d => {return yScale(p3avgValue(d)*100)})
+				.curve(d3.curveCardinal.tension(0.99))
+
+				p3avgpath = mainGroup.append('path').attr('id', 'mainPath').datum(d)
+					.attr('d', p3avgline).attr('fill', 'none').attr('stroke', 'black')
+					.attr("stroke-width",3)
+				const p3avgpath_L = p3avgpath.node().getTotalLength()
+				p3avgpath.attr('stroke-dasharray', p3avgpath_L) 
+				.attr('stroke-dashoffset', p3avgpath_L) 
+				p3avgpath.transition()
+				.duration(1000) 
+				.attr('stroke-dashoffset', 0)
+				.ease(d3.easeLinear)
+
+				mainGroup.selectAll('dataCircles').data(d).join('circle')
+					.attr('cx', d => xScale(xValue(d))).attr('cy', d => yScale(p3avgValue(d)*100)).attr('r', 8)
+					.attr('stroke-width', 2).attr('stroke', '#8B0000').attr('fill', '#8B0000').attr('opacity', 0.6)
+					.on('mouseover', function(event, d){
+					d3.select(this).attr('stroke', '#38eff2');
+					tip.show(event,d)
+					d3.select('.d3-tip')
+					.style('top', `${event.y + $(window).scrollTop() - tipele.offsetHeight - 10}px`)
+					.style('left', `${event.x + $(window).scrollLeft() - tipele.offsetWidth / 2}px`)
+				})
+					.on('mouseout', function(event, d){
+					d3.select(this).attr('stroke', '#364747');
+					tip.hide(event,d)
+				})
+					.on('click', function(event, d){
+					let c = d3.select(this);
+					renderPie(this.__data__.num, c.attr('cx'), c.attr('cy')); 
+					// event.stopPropagation();
+				}); 
+
+				// 图例
+				legdata = ["三分球","两分球","罚球"]
+				var legend = mainGroup.selectAll(".legend")
+				.data(legdata).join('g')
+				.attr("class", "legend")
+				.attr("transform", (d, i) => `translate(${innerWidth+50},${(i * 40)})`);
+
+				legend.append("rect")
+					.attr("x", 0)
+					.attr("y", 0)
+					.attr("width", 30)
+					.attr("height", 30)
+					.style("fill", (d,i)=>colors[i]);
+				
+				mainGroup.append("rect")
+					.attr("x", -10)
+					.attr("y", 0)
+					.attr("width", 50)
+					.attr("height", 3)
+					.style("fill", "black")
+					.attr("transform",`translate(${innerWidth+50},${(135)})`)
+				mainGroup.append("circle")
+					.attr("cx", 15)
+					.attr("cy", 2)
+					.attr("r", 8)
+					.attr('stroke-width', 2)
+					.attr('stroke', '#8B0000')
+					.attr('fill', '#8B0000')
+					.attr('opacity', 0.6)
+					.attr("transform", `translate(${innerWidth+50},${135})`)
+				
+				mainGroup.append("text")
+					.attr("x", 50)
+					.attr("y", 13)
+					.attr("dy", ".45em")
+					.attr("text-anchor", "start")
+					.attr("font-size", '20px')
+					.text("三分球(联盟平均)")
+					.attr("transform",`translate(${innerWidth+50},${(120)})`)
+
+				legend.append("text")
+					.attr("x", 50)
+					.attr("y", 13)
+					.attr("dy", ".45em")
+					.attr("text-anchor", "start")
+					.attr("font-size", '20px')
+					.text(d => d[0].toUpperCase()+d.slice(1)); 
+
+				// button
+				mainGroup.append("rect")
+					.attr("x", 0)
+					.attr("y", 450)
+					.attr("width", 70)
+					.attr("height", 30)
+					.attr("stroke","black")
+					.style("fill", "#6495ED")
+					.attr("transform", `translate(${innerWidth+50},${135})`)
+					.on("click", function(){
+						ptsp_abs(d_abs)
+					})
+				mainGroup.append("text")
+					.attr("x", 35)
+					.attr("y", 463)
+					.attr("dy", ".45em")
+					.attr("text-anchor", "middle")
+					.attr("font-size", '20px')
+					.attr("font-weight", "bold")
+					.attr("transform", `translate(${innerWidth+50},${135})`)
+					.text("绝对值")
+					.on("click", function(){
+						ptsp_abs(d_abs)
+					})
+
+			}
+			// 绝对值
+			function ptsp_abs (d) {
+				mainGroup.selectAll("*").remove()
+				const xValue = d=>d.year
+				const p3Value = d=>d.ptp3
+				const p2Value = d=>d.ptp2
+				const p1Value = d=>d.ptp1
+				const p3avgValue = d=>d.ptp3avg
+				xScale.domain([start_year-0.9,end_year+0.9]).range([0, innerWidth])
+				yScale.domain([0,130]).range([innerHeight, 0])
+				const xAxis = d3.axisBottom(xScale).ticks(end_year-start_year+1).tickFormat(d => d)
+				const yAxis = d3.axisLeft(yScale).tickSize(-innerWidth).ticks(13)
+				// tip
+				const tip = d3.tip().attr('class','d3-tip').html(function(event,d) {return String((d.ptp3avg))})
+				mainGroup.call(tip)
+				const tipele = document.getElementsByClassName('d3-tip')[0]
+
+				const xAxisGroup = mainGroup.append('g').attr('id', 'xAxisGroup').call(xAxis)
+				.attr('transform', `translate(0, ${innerHeight})`)
+				const yAxisGroup = mainGroup.append('g').attr('id', 'yAxisGroup').call(yAxis)
+				xAxisGroup.attr('transform', `translate(${0}, ${innerHeight})`)
+				// font-size of texts of axes: 
+				d3.selectAll('.tick text').attr('font-size', '20px')
+				// titles of axes: 
+				xAxisGroup.append('text').attr('class', 'axisTitle').text('年份')
+					.attr('x', innerWidth/2).attr('y', 60);
+				yAxisGroup.append('text').attr('class', 'axisTitle').text('得分')
+					.attr('transform', 'rotate(-90)').attr('x', -innerHeight/2).attr('y', -60);
+			
+				d3.selectAll('.axisTitle').attr('text-anchor', "middle").attr('fill', 'black').attr('font-size', '25px')
+
+				const naiveKeys = ["ptp3", "ptp2", "ptp1"]
+				var naiveStack = d3.stack()
+				.keys(naiveKeys)
+				.order(d3.stackOrderNone)(d);
+
+				console.log(naiveStack)
+
+				//const colors = ["#FF00FF", "#FFD700", "#3CB371"]
+				const colors = ["#00BFFF", "#98FB98","#FFD700"]
+
+				const bandwidth = 0.6*(xScale(end_year)-xScale(start_year))/(end_year-start_year)
+
+				var bar = mainGroup.selectAll('.datagroup').data(naiveStack).join('g')
+				.attr('class', 'datagroup')
+				.attr('fill', (d,i) => colors[i])
+				.selectAll('.datarect').data(d => d).join('rect')
+				.attr('class', 'datarect')
+				.attr('x', d => xScale(xValue(d.data))-bandwidth/2)
+				.attr('y', innerHeight)
+				.transition()
+				.duration(1000)
+				.delay((d, i) => i * 50) 
+				.attr('y', d => yScale(d[1]))
+				.attr('height', d => yScale(d[0]) - yScale(d[1]))
+				.attr('width', bandwidth)
+				.attr("opacity",0.8)
+
+				var p3avgline = d3.line()
+				.x(d => {return xScale(xValue(d))})
+				.y(d => {return yScale(p3avgValue(d))})
+				.curve(d3.curveCardinal.tension(0.99))
+
+				p3avgpath = mainGroup.append('path').attr('id', 'mainPath').datum(d)
+					.attr('d', p3avgline).attr('fill', 'none').attr('stroke', 'black')
+					.attr("stroke-width",3)
+				const p3avgpath_L = p3avgpath.node().getTotalLength()
+				p3avgpath.attr('stroke-dasharray', p3avgpath_L) 
+				.attr('stroke-dashoffset', p3avgpath_L) 
+				p3avgpath.transition()
+				.duration(1000) 
+				.attr('stroke-dashoffset', 0)
+				.ease(d3.easeLinear)
+
+				mainGroup.selectAll('dataCircles').data(d).join('circle')
+					.attr('cx', d => xScale(xValue(d))).attr('cy', d => yScale(p3avgValue(d))).attr('r', 8)
+					.attr('stroke-width', 2).attr('stroke', '#8B0000').attr('fill', '#8B0000').attr('opacity', 0.6)
+					.on('mouseover', function(event, d){
+					d3.select(this).attr('stroke', '#38eff2');
+					tip.show(event,d)
+					d3.select('.d3-tip')
+					.style('top', `${event.y + $(window).scrollTop() - tipele.offsetHeight - 10}px`)
+					.style('left', `${event.x + $(window).scrollLeft() - tipele.offsetWidth / 2}px`)
+				})
+					.on('mouseout', function(event, d){
+					d3.select(this).attr('stroke', '#364747');
+					tip.hide(event,d)
+				})
+					.on('click', function(event, d){
+					let c = d3.select(this);
+					renderPie(this.__data__.num, c.attr('cx'), c.attr('cy')); 
+					// event.stopPropagation();
+				}); 
+
+				// 图例
+				legdata = ["三分球","两分球","罚球"]
+				var legend = mainGroup.selectAll(".legend")
+				.data(legdata).join('g')
+				.attr("class", "legend")
+				.attr("transform", (d, i) => `translate(${innerWidth+50},${(i * 40)})`);
+
+				legend.append("rect")
+					.attr("x", 0)
+					.attr("y", 0)
+					.attr("width", 30)
+					.attr("height", 30)
+					.style("fill", (d,i)=>colors[i]);
+				
+				mainGroup.append("rect")
+					.attr("x", -10)
+					.attr("y", 0)
+					.attr("width", 50)
+					.attr("height", 3)
+					.style("fill", "black")
+					.attr("transform",`translate(${innerWidth+50},${(135)})`)
+				mainGroup.append("circle")
+					.attr("cx", 15)
+					.attr("cy", 2)
+					.attr("r", 8)
+					.attr('stroke-width', 2)
+					.attr('stroke', '#8B0000')
+					.attr('fill', '#8B0000')
+					.attr('opacity', 0.6)
+					.attr("transform", `translate(${innerWidth+50},${135})`)
+				
+				mainGroup.append("text")
+					.attr("x", 50)
+					.attr("y", 13)
+					.attr("dy", ".45em")
+					.attr("text-anchor", "start")
+					.attr("font-size", '20px')
+					.text("三分球(联盟平均)")
+					.attr("transform",`translate(${innerWidth+50},${(120)})`)
+
+				legend.append("text")
+					.attr("x", 50)
+					.attr("y", 13)
+					.attr("dy", ".45em")
+					.attr("text-anchor", "start")
+					.attr("font-size", '20px')
+					.text(d => d[0].toUpperCase()+d.slice(1)); 
+
+				// button
+				mainGroup.append("rect")
+					.attr("x", 0)
+					.attr("y", 450)
+					.attr("width", 70)
+					.attr("height", 30)
+					.attr("stroke","black")
+					.style("fill", "#6495ED")
+					.attr("transform", `translate(${innerWidth+50},${135})`)
+					.on("click", function(){
+						ptsp_p(d_p)
+					})
+				mainGroup.append("text")
+					.attr("x", 35)
+					.attr("y", 463)
+					.attr("dy", ".45em")
+					.attr("text-anchor", "middle")
+					.attr("font-size", '20px')
+					.attr("font-weight", "bold")
+					.attr("transform", `translate(${innerWidth+50},${135})`)
+					.text("百分比")
+					.on("click", function(){
+						ptsp_p(d_p)
+					})
+			}
+
+			ptsp_abs(d_abs);
+
+		}
+		//出手方式
+		var shoot_svg = function(d_p,d_abs) {
+			function shoot_p (d) {
+				mainGroup.selectAll("*").remove()
+				const xValue = d=>d.year
+				const p3Value = d=>d.ptp3
+				const p2Value = d=>d.ptp2
+				const p1Value = d=>d.ptp1
+				const p3avgValue = d=>d.ptp3avg
+				xScale.domain([start_year-0.9,end_year+0.9]).range([0, innerWidth])
+				yScale.domain([0,100]).range([innerHeight, 0])
+				const xAxis = d3.axisBottom(xScale).ticks(end_year-start_year+1).tickFormat(d => d)
+				const yAxis = d3.axisLeft(yScale).tickSize(-innerWidth).ticks(13)
+				// tip
+				const tip = d3.tip().attr('class','d3-tip').html(function(event,d) {return String((d.ptp3avg*100).toFixed(1))+"%"})
+				mainGroup.call(tip)
+				const tipele = document.getElementsByClassName('d3-tip')[0]
+
+				const xAxisGroup = mainGroup.append('g').attr('id', 'xAxisGroup').call(xAxis)
+				.attr('transform', `translate(0, ${innerHeight})`)
+				const yAxisGroup = mainGroup.append('g').attr('id', 'yAxisGroup').call(yAxis)
+				xAxisGroup.attr('transform', `translate(${0}, ${innerHeight})`)
+				// font-size of texts of axes: 
+				d3.selectAll('.tick text').attr('font-size', '20px')
+				// titles of axes: 
+				xAxisGroup.append('text').attr('class', 'axisTitle').text('年份')
+					.attr('x', innerWidth/2).attr('y', 60);
+				yAxisGroup.append('text').attr('class', 'axisTitle').text('出手占比 %')
+					.attr('transform', 'rotate(-90)').attr('x', -innerHeight/2).attr('y', -60);
+
+				d3.selectAll('.axisTitle').attr('text-anchor', "middle").attr('fill', 'black').attr('font-size', '25px')
+
+				const naiveKeys = ["ptp3", "ptp2", "ptp1"]
+				var naiveStack = d3.stack()
+				.keys(naiveKeys)
+				.order(d3.stackOrderNone)(d);
+
+				console.log(naiveStack)
+
+				//const colors = ["#FF00FF", "#FFD700", "#3CB371"]
+				const colors = ["#00BFFF", "#98FB98","#FFD700"]
+
+				const bandwidth = 0.6*(xScale(end_year)-xScale(start_year))/(end_year-start_year)
+
+				var bar = mainGroup.selectAll('.datagroup').data(naiveStack).join('g')
+				.attr('class', 'datagroup')
+				.attr('fill', (d,i) => colors[i])
+				.selectAll('.datarect').data(d => d).join('rect')
+				.attr('class', 'datarect')
+				.attr('x', d => xScale(xValue(d.data))-bandwidth/2)
+				.attr('y', innerHeight)
+				.transition()
+				.duration(1000)
+				.delay((d, i) => i * 50) 
+				.attr('y', d => yScale(d[1]*100))
+				.attr('height', d => yScale(d[0]*100) - yScale(d[1]*100))
+				.attr('width', bandwidth)
+				.attr("opacity",0.8)
+
+				var p3avgline = d3.line()
+				.x(d => {return xScale(xValue(d))})
+				.y(d => {return yScale(p3avgValue(d)*100)})
+				.curve(d3.curveCardinal.tension(0.99))
+
+				p3avgpath = mainGroup.append('path').attr('id', 'mainPath').datum(d)
+					.attr('d', p3avgline).attr('fill', 'none').attr('stroke', 'black')
+					.attr("stroke-width",3)
+				const p3avgpath_L = p3avgpath.node().getTotalLength()
+				p3avgpath.attr('stroke-dasharray', p3avgpath_L) 
+				.attr('stroke-dashoffset', p3avgpath_L) 
+				p3avgpath.transition()
+				.duration(1000) 
+				.attr('stroke-dashoffset', 0)
+				.ease(d3.easeLinear)
+
+				mainGroup.selectAll('dataCircles').data(d).join('circle')
+					.attr('cx', d => xScale(xValue(d))).attr('cy', d => yScale(p3avgValue(d)*100)).attr('r', 8)
+					.attr('stroke-width', 2).attr('stroke', '#8B0000').attr('fill', '#8B0000').attr('opacity', 0.6)
+					.on('mouseover', function(event, d){
+					d3.select(this).attr('stroke', '#38eff2');
+					tip.show(event,d)
+					d3.select('.d3-tip')
+					.style('top', `${event.y + $(window).scrollTop() - tipele.offsetHeight - 10}px`)
+					.style('left', `${event.x + $(window).scrollLeft() - tipele.offsetWidth / 2}px`)
+				})
+					.on('mouseout', function(event, d){
+					d3.select(this).attr('stroke', '#364747');
+					tip.hide(event,d)
+				})
+					.on('click', function(event, d){
+					let c = d3.select(this);
+					renderPie(this.__data__.num, c.attr('cx'), c.attr('cy')); 
+					// event.stopPropagation();
+				}); 
+
+				// 图例
+				legdata = ["三分球","两分球","罚球"]
+				var legend = mainGroup.selectAll(".legend")
+				.data(legdata).join('g')
+				.attr("class", "legend")
+				.attr("transform", (d, i) => `translate(${innerWidth+50},${(i * 40)})`);
+
+				legend.append("rect")
+					.attr("x", 0)
+					.attr("y", 0)
+					.attr("width", 30)
+					.attr("height", 30)
+					.style("fill", (d,i)=>colors[i]);
+				
+				mainGroup.append("rect")
+					.attr("x", -10)
+					.attr("y", 0)
+					.attr("width", 50)
+					.attr("height", 3)
+					.style("fill", "black")
+					.attr("transform",`translate(${innerWidth+50},${(135)})`)
+				mainGroup.append("circle")
+					.attr("cx", 15)
+					.attr("cy", 2)
+					.attr("r", 8)
+					.attr('stroke-width', 2)
+					.attr('stroke', '#8B0000')
+					.attr('fill', '#8B0000')
+					.attr('opacity', 0.6)
+					.attr("transform", `translate(${innerWidth+50},${135})`)
+				
+				mainGroup.append("text")
+					.attr("x", 50)
+					.attr("y", 13)
+					.attr("dy", ".45em")
+					.attr("text-anchor", "start")
+					.attr("font-size", '20px')
+					.text("三分球(联盟平均)")
+					.attr("transform",`translate(${innerWidth+50},${(120)})`)
+
+				legend.append("text")
+					.attr("x", 50)
+					.attr("y", 13)
+					.attr("dy", ".45em")
+					.attr("text-anchor", "start")
+					.attr("font-size", '20px')
+					.text(d => d[0].toUpperCase()+d.slice(1)); 
+
+				// button
+				mainGroup.append("rect")
+					.attr("x", 0)
+					.attr("y", 450)
+					.attr("width", 70)
+					.attr("height", 30)
+					.attr("stroke","black")
+					.style("fill", "#6495ED")
+					.attr("transform", `translate(${innerWidth+50},${135})`)
+					.on("click", function(){
+						shoot_abs(d_abs)
+					})
+				mainGroup.append("text")
+					.attr("x", 35)
+					.attr("y", 463)
+					.attr("dy", ".45em")
+					.attr("text-anchor", "middle")
+					.attr("font-size", '20px')
+					.attr("font-weight", "bold")
+					.attr("transform", `translate(${innerWidth+50},${135})`)
+					.text("绝对值")
+					.on("click", function(){
+						shoot_abs(d_abs)
+					})
+
+			}
+			// 绝对值
+			function shoot_abs (d) {
+				mainGroup.selectAll("*").remove()
+				const xValue = d=>d.year
+				const p3Value = d=>d.ptp3
+				const p2Value = d=>d.ptp2
+				const p1Value = d=>d.ptp1
+				const p3avgValue = d=>d.ptp3avg
+				xScale.domain([start_year-0.9,end_year+0.9]).range([0, innerWidth])
+				yScale.domain([0,130]).range([innerHeight, 0])
+				const xAxis = d3.axisBottom(xScale).ticks(end_year-start_year+1).tickFormat(d => d)
+				const yAxis = d3.axisLeft(yScale).tickSize(-innerWidth).ticks(13)
+				// tip
+				const tip = d3.tip().attr('class','d3-tip').html(function(event,d) {return String((d.ptp3avg))})
+				mainGroup.call(tip)
+				const tipele = document.getElementsByClassName('d3-tip')[0]
+
+				const xAxisGroup = mainGroup.append('g').attr('id', 'xAxisGroup').call(xAxis)
+				.attr('transform', `translate(0, ${innerHeight})`)
+				const yAxisGroup = mainGroup.append('g').attr('id', 'yAxisGroup').call(yAxis)
+				xAxisGroup.attr('transform', `translate(${0}, ${innerHeight})`)
+				// font-size of texts of axes: 
+				d3.selectAll('.tick text').attr('font-size', '20px')
+				// titles of axes: 
+				xAxisGroup.append('text').attr('class', 'axisTitle').text('年份')
+					.attr('x', innerWidth/2).attr('y', 60);
+				yAxisGroup.append('text').attr('class', 'axisTitle').text('出手次数')
+					.attr('transform', 'rotate(-90)').attr('x', -innerHeight/2).attr('y', -60);
+
+				d3.selectAll('.axisTitle').attr('text-anchor', "middle").attr('fill', 'black').attr('font-size', '25px')
+
+				const naiveKeys = ["ptp3", "ptp2", "ptp1"]
+				var naiveStack = d3.stack()
+				.keys(naiveKeys)
+				.order(d3.stackOrderNone)(d);
+
+				console.log(naiveStack)
+
+				//const colors = ["#FF00FF", "#FFD700", "#3CB371"]
+				const colors = ["#00BFFF", "#98FB98","#FFD700"]
+
+				const bandwidth = 0.6*(xScale(end_year)-xScale(start_year))/(end_year-start_year)
+
+				var bar = mainGroup.selectAll('.datagroup').data(naiveStack).join('g')
+				.attr('class', 'datagroup')
+				.attr('fill', (d,i) => colors[i])
+				.selectAll('.datarect').data(d => d).join('rect')
+				.attr('class', 'datarect')
+				.attr('x', d => xScale(xValue(d.data))-bandwidth/2)
+				.attr('y', innerHeight)
+				.transition()
+				.duration(1000)
+				.delay((d, i) => i * 50) 
+				.attr('y', d => yScale(d[1]))
+				.attr('height', d => yScale(d[0]) - yScale(d[1]))
+				.attr('width', bandwidth)
+				.attr("opacity",0.8)
+
+				var p3avgline = d3.line()
+				.x(d => {return xScale(xValue(d))})
+				.y(d => {return yScale(p3avgValue(d))})
+				.curve(d3.curveCardinal.tension(0.99))
+
+				p3avgpath = mainGroup.append('path').attr('id', 'mainPath').datum(d)
+					.attr('d', p3avgline).attr('fill', 'none').attr('stroke', 'black')
+					.attr("stroke-width",3)
+				const p3avgpath_L = p3avgpath.node().getTotalLength()
+				p3avgpath.attr('stroke-dasharray', p3avgpath_L) 
+				.attr('stroke-dashoffset', p3avgpath_L) 
+				p3avgpath.transition()
+				.duration(1000) 
+				.attr('stroke-dashoffset', 0)
+				.ease(d3.easeLinear)
+
+				mainGroup.selectAll('dataCircles').data(d).join('circle')
+					.attr('cx', d => xScale(xValue(d))).attr('cy', d => yScale(p3avgValue(d))).attr('r', 8)
+					.attr('stroke-width', 2).attr('stroke', '#8B0000').attr('fill', '#8B0000').attr('opacity', 0.6)
+					.on('mouseover', function(event, d){
+					d3.select(this).attr('stroke', '#38eff2');
+					tip.show(event,d)
+					d3.select('.d3-tip')
+					.style('top', `${event.y + $(window).scrollTop() - tipele.offsetHeight - 10}px`)
+					.style('left', `${event.x + $(window).scrollLeft() - tipele.offsetWidth / 2}px`)
+				})
+					.on('mouseout', function(event, d){
+					d3.select(this).attr('stroke', '#364747');
+					tip.hide(event,d)
+				})
+					.on('click', function(event, d){
+					let c = d3.select(this);
+					renderPie(this.__data__.num, c.attr('cx'), c.attr('cy')); 
+					// event.stopPropagation();
+				}); 
+
+				// 图例
+				legdata = ["三分球","两分球","罚球"]
+				var legend = mainGroup.selectAll(".legend")
+				.data(legdata).join('g')
+				.attr("class", "legend")
+				.attr("transform", (d, i) => `translate(${innerWidth+50},${(i * 40)})`);
+
+				legend.append("rect")
+					.attr("x", 0)
+					.attr("y", 0)
+					.attr("width", 30)
+					.attr("height", 30)
+					.style("fill", (d,i)=>colors[i]);
+				
+				mainGroup.append("rect")
+					.attr("x", -10)
+					.attr("y", 0)
+					.attr("width", 50)
+					.attr("height", 3)
+					.style("fill", "black")
+					.attr("transform",`translate(${innerWidth+50},${(135)})`)
+				mainGroup.append("circle")
+					.attr("cx", 15)
+					.attr("cy", 2)
+					.attr("r", 8)
+					.attr('stroke-width', 2)
+					.attr('stroke', '#8B0000')
+					.attr('fill', '#8B0000')
+					.attr('opacity', 0.6)
+					.attr("transform", `translate(${innerWidth+50},${135})`)
+				
+				mainGroup.append("text")
+					.attr("x", 50)
+					.attr("y", 13)
+					.attr("dy", ".45em")
+					.attr("text-anchor", "start")
+					.attr("font-size", '20px')
+					.text("三分球(联盟平均)")
+					.attr("transform",`translate(${innerWidth+50},${(120)})`)
+
+				legend.append("text")
+					.attr("x", 50)
+					.attr("y", 13)
+					.attr("dy", ".45em")
+					.attr("text-anchor", "start")
+					.attr("font-size", '20px')
+					.text(d => d[0].toUpperCase()+d.slice(1)); 
+
+				// button
+				mainGroup.append("rect")
+					.attr("x", 0)
+					.attr("y", 450)
+					.attr("width", 70)
+					.attr("height", 30)
+					.attr("stroke","black")
+					.style("fill", "#6495ED")
+					.attr("transform", `translate(${innerWidth+50},${135})`)
+					.on("click", function(){
+						shoot_p(d_p)
+					})
+				mainGroup.append("text")
+					.attr("x", 35)
+					.attr("y", 463)
+					.attr("dy", ".45em")
+					.attr("text-anchor", "middle")
+					.attr("font-size", '20px')
+					.attr("font-weight", "bold")
+					.attr("transform", `translate(${innerWidth+50},${135})`)
+					.text("百分比")
+					.on("click", function(){
+						shoot_p(d_p)
+					})
+			}
+
+			shoot_abs(d_abs);
+
+			}
+
+
 
 		//篮板
 		var rebound_svg = function(d) {
@@ -690,10 +1569,11 @@
 				win_svg(data.win.slice(start_year-2004,end_year+19-2022))
 			}
 			else if (document.getElementsByClassName("dataselect")[0].value == "ptsp") {
-				ptsp_svg(data.ptsp.slice(start_year-2004,end_year+19-2022))
+				ptsp_svg(data.ptsp.slice(start_year-2004,end_year+19-2022),data.ptspabs.slice(start_year-2004,end_year+19-2022))
 			}
 			else if (document.getElementsByClassName("dataselect")[0].value == "rebound") {
-				rebound_svg(data.rebound.slice(start_year-2004,end_year+19-2022))
+				//rebound_svg(data.rebound.slice(start_year-2004,end_year+19-2022))
+				shoot_svg(data.shootp.slice(start_year-2004,end_year+19-2022),data.shootpabs.slice(start_year-2004,end_year+19-2022))
 			}
 		
 		})
@@ -708,10 +1588,12 @@
 				win_svg(data.win.slice(start_year-2004,end_year+19-2022))
 			}
 			else if (document.getElementsByClassName("dataselect")[0].value == "ptsp") {
-				ptsp_svg(data.ptsp.slice(start_year-2004,end_year+19-2022))
+				ptsp_svg(data.ptsp.slice(start_year-2004,end_year+19-2022),data.ptspabs.slice(start_year-2004,end_year+19-2022))
 			}
 			else if (document.getElementsByClassName("dataselect")[0].value == "rebound") {
-				rebound_svg(data.rebound.slice(start_year-2004,end_year+19-2022))
+				// rebound_svg(data.rebound.slice(start_year-2004,end_year+19-2022))
+				shoot_svg(data.shootp.slice(start_year-2004,end_year+19-2022),data.shootpabs.slice(start_year-2004,end_year+19-2022))
+				
 			}
 		})
 		// endyear change
@@ -724,10 +1606,11 @@
 				win_svg(data.win.slice(start_year-2004,end_year+19-2022))
 			}
 			else if (document.getElementsByClassName("dataselect")[0].value == "ptsp") {
-				ptsp_svg(data.ptsp.slice(start_year-2004,end_year+19-2022))
+				ptsp_svg(data.ptsp.slice(start_year-2004,end_year+19-2022),data.ptspabs.slice(start_year-2004,end_year+19-2022))
 			}
 			else if (document.getElementsByClassName("dataselect")[0].value == "rebound") {
-				rebound_svg(data.rebound.slice(start_year-2004,end_year+19-2022))
+				//rebound_svg(data.rebound.slice(start_year-2004,end_year+19-2022))
+				shoot_svg(data.shootp.slice(start_year-2004,end_year+19-2022),data.shootpabs.slice(start_year-2004,end_year+19-2022))
 			}
 		})
 
