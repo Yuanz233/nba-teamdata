@@ -33,7 +33,6 @@
 	<p class="icontext">
 		&nbsp; &nbsp; &nbsp; &nbsp;统计年份
   		<select class="startyear">
-			<option value="2004">2004</option>
 			<option value="2005">2005</option>
 			<option value="2006">2006</option>
 			<option value="2007">2007</option>
@@ -52,9 +51,11 @@
 			<option value="2020">2020</option>
 			<option value="2021">2021</option>
 			<option value="2022">2022</option>
+			<option value="2023">2023</option>
 	    </select>
 	~
 		<select class="endyear">
+			<option value="2023">2023</option>
 			<option value="2022">2022</option>
 			<option value="2021">2021</option>
 			<option value="2020">2020</option>
@@ -73,7 +74,6 @@
 			<option value="2007">2007</option>
 			<option value="2006">2006</option>
 			<option value="2005">2005</option>
-			<option value="2004">2004</option>
     	</select>
     </p>
 <p class="icontext">
@@ -104,7 +104,6 @@
 	}
 	// 显示图标
 	team_str = teamdict[teamid]
-	console.log(location.search)
 	document.getElementsByClassName("icon")[0].src = "imgs/"+team_str+"_logo.svg"
 	// 参数修改
 	document.getElementsByClassName("general")[0].href = "team_general.html?teamid="+teamid.toString()
@@ -494,8 +493,6 @@
 				.keys(naiveKeys)
 				.order(d3.stackOrderNone)(d);
 
-				console.log(naiveStack)
-
 				//const colors = ["#FF00FF", "#FFD700", "#3CB371"]
 				const colors = ["#00BFFF", "#98FB98","#FFD700"]
 
@@ -661,8 +658,6 @@
 				var naiveStack = d3.stack()
 				.keys(naiveKeys)
 				.order(d3.stackOrderNone)(d);
-
-				console.log(naiveStack)
 
 				//const colors = ["#FF00FF", "#FFD700", "#3CB371"]
 				const colors = ["#00BFFF", "#98FB98","#FFD700"]
@@ -836,8 +831,6 @@
 				.keys(naiveKeys)
 				.order(d3.stackOrderNone)(d);
 
-				console.log(naiveStack)
-
 				//const colors = ["#FF00FF", "#FFD700", "#3CB371"]
 				const colors = ["#00BFFF", "#98FB98","#FFD700"]
 
@@ -1003,8 +996,6 @@
 				var naiveStack = d3.stack()
 				.keys(naiveKeys)
 				.order(d3.stackOrderNone)(d);
-
-				console.log(naiveStack)
 
 				//const colors = ["#FF00FF", "#FFD700", "#3CB371"]
 				const colors = ["#00BFFF", "#98FB98","#FFD700"]
@@ -1176,8 +1167,6 @@
 				.keys(naiveKeys)
 				.order(d3.stackOrderNone)(d);
 
-				console.log(naiveStack)
-
 				//const colors = ["#FF00FF", "#FFD700", "#3CB371"]
 				const colors = ["#00BFFF", "#98FB98","#FFD700"]
 
@@ -1343,8 +1332,6 @@
 				var naiveStack = d3.stack()
 				.keys(naiveKeys)
 				.order(d3.stackOrderNone)(d);
-
-				console.log(naiveStack)
 
 				//const colors = ["#FF00FF", "#FFD700", "#3CB371"]
 				const colors = ["#00BFFF", "#98FB98","#FFD700"]
@@ -1516,7 +1503,6 @@
 			const colors = ["#8B0000","#00008B"]
 
 			const bandwidth = 0.6*(xScale(end_year)-xScale(start_year))/(end_year-start_year)
-			console.log(bandwidth)
 
 			var bar = mainGroup.selectAll('.datagroup').data(naiveStack).join('g')
 			.attr('class', 'datagroup')
@@ -1560,20 +1546,20 @@
 		}
 		
 		// init
-		points_svg(data.points.slice(start_year-2004,end_year+19-2022))
+		points_svg(data.points.slice(start_year-2005,end_year+19-2023))
 		document.getElementsByClassName("dataselect")[0].addEventListener("change", function() {
 			if (document.getElementsByClassName("dataselect")[0].value == "points"){
-				points_svg(data.points.slice(start_year-2004,end_year+19-2022))
+				points_svg(data.points.slice(start_year-2005,end_year+19-2023))
 			}
 			else if (document.getElementsByClassName("dataselect")[0].value == "win") {
-				win_svg(data.win.slice(start_year-2004,end_year+19-2022))
+				win_svg(data.win.slice(start_year-2005,end_year+19-2023))
 			}
 			else if (document.getElementsByClassName("dataselect")[0].value == "ptsp") {
-				ptsp_svg(data.ptsp.slice(start_year-2004,end_year+19-2022),data.ptspabs.slice(start_year-2004,end_year+19-2022))
+				ptsp_svg(data.ptsp.slice(start_year-2005,end_year+19-2023),data.ptspabs.slice(start_year-2005,end_year+19-2023))
 			}
 			else if (document.getElementsByClassName("dataselect")[0].value == "rebound") {
 				//rebound_svg(data.rebound.slice(start_year-2004,end_year+19-2022))
-				shoot_svg(data.shootp.slice(start_year-2004,end_year+19-2022),data.shootpabs.slice(start_year-2004,end_year+19-2022))
+				shoot_svg(data.shootp.slice(start_year-2005,end_year+19-2023),data.shootpabs.slice(start_year-2005,end_year+19-2023))
 			}
 		
 		})
@@ -1582,17 +1568,17 @@
 		document.getElementsByClassName("startyear")[0].addEventListener("change", function() {
 			start_year = parseInt(document.getElementsByClassName("startyear")[0].value)
 			if (document.getElementsByClassName("dataselect")[0].value == "points"){
-				points_svg(data.points.slice(start_year-2004,end_year+19-2022))
+				points_svg(data.points.slice(start_year-2005,end_year+19-2023))
 			}
 			else if (document.getElementsByClassName("dataselect")[0].value == "win") {
-				win_svg(data.win.slice(start_year-2004,end_year+19-2022))
+				win_svg(data.win.slice(start_year-2005,end_year+19-2023))
 			}
 			else if (document.getElementsByClassName("dataselect")[0].value == "ptsp") {
-				ptsp_svg(data.ptsp.slice(start_year-2004,end_year+19-2022),data.ptspabs.slice(start_year-2004,end_year+19-2022))
+				ptsp_svg(data.ptsp.slice(start_year-2005,end_year+19-2023),data.ptspabs.slice(start_year-2005,end_year+19-2023))
 			}
 			else if (document.getElementsByClassName("dataselect")[0].value == "rebound") {
 				// rebound_svg(data.rebound.slice(start_year-2004,end_year+19-2022))
-				shoot_svg(data.shootp.slice(start_year-2004,end_year+19-2022),data.shootpabs.slice(start_year-2004,end_year+19-2022))
+				shoot_svg(data.shootp.slice(start_year-2005,end_year+19-2023),data.shootpabs.slice(start_year-2005,end_year+19-2023))
 				
 			}
 		})
@@ -1600,17 +1586,17 @@
 		document.getElementsByClassName("endyear")[0].addEventListener("change", function() {
 			end_year = parseInt(document.getElementsByClassName("endyear")[0].value)
 			if (document.getElementsByClassName("dataselect")[0].value == "points"){
-				points_svg(data.points.slice(start_year-2004,end_year+19-2022))
+				points_svg(data.points.slice(start_year-2005,end_year+19-2023))
 			}
 			else if (document.getElementsByClassName("dataselect")[0].value == "win") {
-				win_svg(data.win.slice(start_year-2004,end_year+19-2022))
+				win_svg(data.win.slice(start_year-2005,end_year+19-2023))
 			}
 			else if (document.getElementsByClassName("dataselect")[0].value == "ptsp") {
-				ptsp_svg(data.ptsp.slice(start_year-2004,end_year+19-2022),data.ptspabs.slice(start_year-2004,end_year+19-2022))
+				ptsp_svg(data.ptsp.slice(start_year-2005,end_year+19-2023),data.ptspabs.slice(start_year-2005,end_year+19-2023))
 			}
 			else if (document.getElementsByClassName("dataselect")[0].value == "rebound") {
 				//rebound_svg(data.rebound.slice(start_year-2004,end_year+19-2022))
-				shoot_svg(data.shootp.slice(start_year-2004,end_year+19-2022),data.shootpabs.slice(start_year-2004,end_year+19-2022))
+				shoot_svg(data.shootp.slice(start_year-2005,end_year+19-2023),data.shootpabs.slice(start_year-2005,end_year+19-2023))
 			}
 		})
 
